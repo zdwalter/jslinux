@@ -192,8 +192,8 @@ CPU_X86.prototype.dump=function(){
 
 CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     var self,fa,regs;
-    var ya,cc_dst,Aa,Ba,Ca;
-    var Da,Ea,Fa,b,Ga,ga,Ha,Ia,Ja,cycle_executed,La,Ma;
+    var cc_src,cc_dst,cc_op,cc_op2,cc_dst2;
+    var Da,Ea,Fa,b,Ga,ga,Ha,Ia,Ja,cycle_executed,ret,Ma;
     var phys_mem8,Oa;
     var phys_mem16,phys_mem32;
     var tlb_read_kernel,tlb_write_kernel,tlb_read_user,tlb_write_user,tlb_read,tlb_write;
@@ -414,7 +414,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         }else{
             phys_mem32[(fa^Ya)>>2]=ga;
         }
-    }var Db,Eb,Fb,Gb;
+    }var eip,Eb,Fb,Gb;
     function Hb(){
         var ga,Ha;
         ga=phys_mem8[Eb++];
@@ -532,179 +532,179 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     function Pb(Ja,Qb,Rb){
         var Sb;
         switch(Ja){
-            case 0:ya=Rb;
+            case 0:cc_src=Rb;
                    Qb=(Qb+Rb)&-1;
                    cc_dst=Qb;
-                   Aa=0;
+                   cc_op=0;
                    break;
             case 1:Qb=Qb|Rb;
                    cc_dst=Qb;
-                   Aa=12;
+                   cc_op=12;
                    break;
             case 2:Sb=Tb(2);
-                   ya=Rb;
+                   cc_src=Rb;
                    Qb=(Qb+Rb+Sb)&-1;
                    cc_dst=Qb;
-                   Aa=Sb?3:0;
+                   cc_op=Sb?3:0;
                    break;
             case 3:Sb=Tb(2);
-                   ya=Rb;
+                   cc_src=Rb;
                    Qb=(Qb-Rb-Sb)&-1;
                    cc_dst=Qb;
-                   Aa=Sb?9:6;
+                   cc_op=Sb?9:6;
                    break;
             case 4:Qb=Qb&Rb;
                    cc_dst=Qb;
-                   Aa=12;
+                   cc_op=12;
                    break;
-            case 5:ya=Rb;
+            case 5:cc_src=Rb;
                    Qb=(Qb-Rb)&-1;
                    cc_dst=Qb;
-                   Aa=6;
+                   cc_op=6;
                    break;
             case 6:Qb=Qb^Rb;
                    cc_dst=Qb;
-                   Aa=12;
+                   cc_op=12;
                    break;
-            case 7:ya=Rb;
+            case 7:cc_src=Rb;
                    cc_dst=(Qb-Rb)&-1;
-                   Aa=6;
+                   cc_op=6;
                    break;
             default:throw"arith"+8+": invalid op";
         }
         return Qb;
     }
     function Ub(ga){
-        if(Aa<25){
-            Ba=Aa;
-        }Ca=(ga+1)&-1;
-        Aa=25;
-        return Ca;
+        if(cc_op<25){
+            cc_op2=cc_op;
+        }cc_dst2=(ga+1)&-1;
+        cc_op=25;
+        return cc_dst2;
     }
     function Vb(ga){
-        if(Aa<25){
-            Ba=Aa;
-        }Ca=(ga-1)&-1;
-        Aa=28;
-        return Ca;
+        if(cc_op<25){
+            cc_op2=cc_op;
+        }cc_dst2=(ga-1)&-1;
+        cc_op=28;
+        return cc_dst2;
     }
     function Wb(Ja,Qb,Rb){
         var Sb;
         switch(Ja){
-            case 0:ya=Rb;
+            case 0:cc_src=Rb;
                    Qb=(Qb+Rb)&-1;
                    cc_dst=Qb;
-                   Aa=1;
+                   cc_op=1;
                    break;
             case 1:Qb=Qb|Rb;
                    cc_dst=Qb;
-                   Aa=13;
+                   cc_op=13;
                    break;
             case 2:Sb=Tb(2);
-                   ya=Rb;
+                   cc_src=Rb;
                    Qb=(Qb+Rb+Sb)&-1;
                    cc_dst=Qb;
-                   Aa=Sb?4:1;
+                   cc_op=Sb?4:1;
                    break;
             case 3:Sb=Tb(2);
-                   ya=Rb;
+                   cc_src=Rb;
                    Qb=(Qb-Rb-Sb)&-1;
                    cc_dst=Qb;
-                   Aa=Sb?10:7;
+                   cc_op=Sb?10:7;
                    break;
             case 4:Qb=Qb&Rb;
                    cc_dst=Qb;
-                   Aa=13;
+                   cc_op=13;
                    break;
-            case 5:ya=Rb;
+            case 5:cc_src=Rb;
                    Qb=(Qb-Rb)&-1;
                    cc_dst=Qb;
-                   Aa=7;
+                   cc_op=7;
                    break;
             case 6:Qb=Qb^Rb;
                    cc_dst=Qb;
-                   Aa=13;
+                   cc_op=13;
                    break;
-            case 7:ya=Rb;
+            case 7:cc_src=Rb;
                    cc_dst=(Qb-Rb)&-1;
-                   Aa=7;
+                   cc_op=7;
                    break;
             default:throw"arith"+16+": invalid op";
         }
         return Qb;
     }
     function Xb(ga){
-        if(Aa<25){
-            Ba=Aa;
-        }Ca=(ga+1)&-1;
-        Aa=26;
-        return Ca;
+        if(cc_op<25){
+            cc_op2=cc_op;
+        }cc_dst2=(ga+1)&-1;
+        cc_op=26;
+        return cc_dst2;
     }
     function Yb(ga){
-        if(Aa<25){
-            Ba=Aa;
-        }Ca=(ga-1)&-1;
-        Aa=29;
-        return Ca;
+        if(cc_op<25){
+            cc_op2=cc_op;
+        }cc_dst2=(ga-1)&-1;
+        cc_op=29;
+        return cc_dst2;
     }
     function Zb(Ja,Qb,Rb){
         var Sb;
         switch(Ja){
-            case 0:ya=Rb;
+            case 0:cc_src=Rb;
                    Qb=(Qb+Rb)&-1;
                    cc_dst=Qb;
-                   Aa=2;
+                   cc_op=2;
                    break;
             case 1:Qb=Qb|Rb;
                    cc_dst=Qb;
-                   Aa=14;
+                   cc_op=14;
                    break;
             case 2:Sb=Tb(2);
-                   ya=Rb;
+                   cc_src=Rb;
                    Qb=(Qb+Rb+Sb)&-1;
                    cc_dst=Qb;
-                   Aa=Sb?5:2;
+                   cc_op=Sb?5:2;
                    break;
             case 3:Sb=Tb(2);
-                   ya=Rb;
+                   cc_src=Rb;
                    Qb=(Qb-Rb-Sb)&-1;
                    cc_dst=Qb;
-                   Aa=Sb?11:8;
+                   cc_op=Sb?11:8;
                    break;
             case 4:Qb=Qb&Rb;
                    cc_dst=Qb;
-                   Aa=14;
+                   cc_op=14;
                    break;
-            case 5:ya=Rb;
+            case 5:cc_src=Rb;
                    Qb=(Qb-Rb)&-1;
                    cc_dst=Qb;
-                   Aa=8;
+                   cc_op=8;
                    break;
             case 6:Qb=Qb^Rb;
                    cc_dst=Qb;
-                   Aa=14;
+                   cc_op=14;
                    break;
-            case 7:ya=Rb;
+            case 7:cc_src=Rb;
                    cc_dst=(Qb-Rb)&-1;
-                   Aa=8;
+                   cc_op=8;
                    break;
             default:throw"arith"+32+": invalid op";
         }
         return Qb;
     }
     function ac(ga){
-        if(Aa<25){
-            Ba=Aa;
-        }Ca=(ga+1)&-1;
-        Aa=27;
-        return Ca;
+        if(cc_op<25){
+            cc_op2=cc_op;
+        }cc_dst2=(ga+1)&-1;
+        cc_op=27;
+        return cc_dst2;
     }
     function bc(ga){
-        if(Aa<25){
-            Ba=Aa;
-        }Ca=(ga-1)&-1;
-        Aa=30;
-        return Ca;
+        if(cc_op<25){
+            cc_op2=cc_op;
+        }cc_dst2=(ga-1)&-1;
+        cc_op=30;
+        return cc_dst2;
     }
     function cc(Ja,Qb,Rb){
         var dc,Sb;
@@ -714,9 +714,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        Qb&=0xff;
                        dc=Qb;
                        Qb=(Qb<<Rb)|(Qb>>>(8-Rb));
-                       ya=ec()&~(0x0800|0x0001);
-                       ya|=(Qb&0x0001)|(((dc^Qb)<<4)&0x0800);
-                       Aa=24;
+                       cc_src=ec()&~(0x0800|0x0001);
+                       cc_src|=(Qb&0x0001)|(((dc^Qb)<<4)&0x0800);
+                       cc_op=24;
                    }
                    break;
             case 1:if(Rb&0x1f){
@@ -724,9 +724,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        Qb&=0xff;
                        dc=Qb;
                        Qb=(Qb>>>Rb)|(Qb<<(8-Rb));
-                       ya=ec()&~(0x0800|0x0001);
-                       ya|=((Qb>>7)&0x0001)|(((dc^Qb)<<4)&0x0800);
-                       Aa=24;
+                       cc_src=ec()&~(0x0800|0x0001);
+                       cc_src|=((Qb>>7)&0x0001)|(((dc^Qb)<<4)&0x0800);
+                       cc_op=24;
                    }
                    break;
             case 2:Rb=ca[Rb&0x1f];
@@ -736,9 +736,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        Sb=Tb(2);
                        Qb=(Qb<<Rb)|(Sb<<(Rb-1));
                        if(Rb>1)Qb|=dc>>>(9-Rb);
-                       ya=ec()&~(0x0800|0x0001);
-                       ya|=(((dc^Qb)<<4)&0x0800)|((dc>>(8-Rb))&0x0001);
-                       Aa=24;
+                       cc_src=ec()&~(0x0800|0x0001);
+                       cc_src|=(((dc^Qb)<<4)&0x0800)|((dc>>(8-Rb))&0x0001);
+                       cc_op=24;
                    }
                    break;
             case 3:Rb=ca[Rb&0x1f];
@@ -748,33 +748,33 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        Sb=Tb(2);
                        Qb=(Qb>>>Rb)|(Sb<<(8-Rb));
                        if(Rb>1)Qb|=dc<<(9-Rb);
-                       ya=ec()&~(0x0800|0x0001);
-                       ya|=(((dc^Qb)<<4)&0x0800)|((dc>>(Rb-1))&0x0001);
-                       Aa=24;
+                       cc_src=ec()&~(0x0800|0x0001);
+                       cc_src|=(((dc^Qb)<<4)&0x0800)|((dc>>(Rb-1))&0x0001);
+                       cc_op=24;
                    }
                    break;
             case 4:
             case 6:Rb&=0x1f;
                    if(Rb){
-                       ya=Qb<<(Rb-1);
+                       cc_src=Qb<<(Rb-1);
                        cc_dst=Qb=Qb<<Rb;
-                       Aa=15;
+                       cc_op=15;
                    }
                    break;
             case 5:Rb&=0x1f;
                    if(Rb){
                        Qb&=0xff;
-                       ya=Qb>>>(Rb-1);
+                       cc_src=Qb>>>(Rb-1);
                        cc_dst=Qb=Qb>>>Rb;
-                       Aa=18;
+                       cc_op=18;
                    }
                    break;
             case 7:Rb&=0x1f;
                    if(Rb){
                        Qb=(Qb<<24)>>24;
-                       ya=Qb>>(Rb-1);
+                       cc_src=Qb>>(Rb-1);
                        cc_dst=Qb=Qb>>Rb;
-                       Aa=18;
+                       cc_op=18;
                    }
                    break;
             default:throw"unsupported shift8="+Ja;
@@ -789,9 +789,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        Qb&=0xffff;
                        dc=Qb;
                        Qb=(Qb<<Rb)|(Qb>>>(16-Rb));
-                       ya=ec()&~(0x0800|0x0001);
-                       ya|=(Qb&0x0001)|(((dc^Qb)>>4)&0x0800);
-                       Aa=24;
+                       cc_src=ec()&~(0x0800|0x0001);
+                       cc_src|=(Qb&0x0001)|(((dc^Qb)>>4)&0x0800);
+                       cc_op=24;
                    }
                    break;
             case 1:if(Rb&0x1f){
@@ -799,9 +799,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        Qb&=0xffff;
                        dc=Qb;
                        Qb=(Qb>>>Rb)|(Qb<<(16-Rb));
-                       ya=ec()&~(0x0800|0x0001);
-                       ya|=((Qb>>15)&0x0001)|(((dc^Qb)>>4)&0x0800);
-                       Aa=24;
+                       cc_src=ec()&~(0x0800|0x0001);
+                       cc_src|=((Qb>>15)&0x0001)|(((dc^Qb)>>4)&0x0800);
+                       cc_op=24;
                    }
                    break;
             case 2:Rb=ba[Rb&0x1f];
@@ -811,9 +811,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        Sb=Tb(2);
                        Qb=(Qb<<Rb)|(Sb<<(Rb-1));
                        if(Rb>1)Qb|=dc>>>(17-Rb);
-                       ya=ec()&~(0x0800|0x0001);
-                       ya|=(((dc^Qb)>>4)&0x0800)|((dc>>(16-Rb))&0x0001);
-                       Aa=24;
+                       cc_src=ec()&~(0x0800|0x0001);
+                       cc_src|=(((dc^Qb)>>4)&0x0800)|((dc>>(16-Rb))&0x0001);
+                       cc_op=24;
                    }
                    break;
             case 3:Rb=ba[Rb&0x1f];
@@ -823,33 +823,33 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        Sb=Tb(2);
                        Qb=(Qb>>>Rb)|(Sb<<(16-Rb));
                        if(Rb>1)Qb|=dc<<(17-Rb);
-                       ya=ec()&~(0x0800|0x0001);
-                       ya|=(((dc^Qb)>>4)&0x0800)|((dc>>(Rb-1))&0x0001);
-                       Aa=24;
+                       cc_src=ec()&~(0x0800|0x0001);
+                       cc_src|=(((dc^Qb)>>4)&0x0800)|((dc>>(Rb-1))&0x0001);
+                       cc_op=24;
                    }
                    break;
             case 4:
             case 6:Rb&=0x1f;
                    if(Rb){
-                       ya=Qb<<(Rb-1);
+                       cc_src=Qb<<(Rb-1);
                        cc_dst=Qb=Qb<<Rb;
-                       Aa=16;
+                       cc_op=16;
                    }
                    break;
             case 5:Rb&=0x1f;
                    if(Rb){
                        Qb&=0xffff;
-                       ya=Qb>>>(Rb-1);
+                       cc_src=Qb>>>(Rb-1);
                        cc_dst=Qb=Qb>>>Rb;
-                       Aa=19;
+                       cc_op=19;
                    }
                    break;
             case 7:Rb&=0x1f;
                    if(Rb){
                        Qb=(Qb<<16)>>16;
-                       ya=Qb>>(Rb-1);
+                       cc_src=Qb>>(Rb-1);
                        cc_dst=Qb=Qb>>Rb;
-                       Aa=19;
+                       cc_op=19;
                    }
                    break;
             default:throw"unsupported shift16="+Ja;
@@ -863,18 +863,18 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    if(Rb){
                        dc=Qb;
                        Qb=(Qb<<Rb)|(Qb>>>(32-Rb));
-                       ya=ec()&~(0x0800|0x0001);
-                       ya|=(Qb&0x0001)|(((dc^Qb)>>20)&0x0800);
-                       Aa=24;
+                       cc_src=ec()&~(0x0800|0x0001);
+                       cc_src|=(Qb&0x0001)|(((dc^Qb)>>20)&0x0800);
+                       cc_op=24;
                    }
                    break;
             case 1:Rb&=0x1f;
                    if(Rb){
                        dc=Qb;
                        Qb=(Qb>>>Rb)|(Qb<<(32-Rb));
-                       ya=ec()&~(0x0800|0x0001);
-                       ya|=((Qb>>31)&0x0001)|(((dc^Qb)>>20)&0x0800);
-                       Aa=24;
+                       cc_src=ec()&~(0x0800|0x0001);
+                       cc_src|=((Qb>>31)&0x0001)|(((dc^Qb)>>20)&0x0800);
+                       cc_op=24;
                    }
                    break;
             case 2:Rb&=0x1f;
@@ -883,9 +883,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        Sb=Tb(2);
                        Qb=(Qb<<Rb)|(Sb<<(Rb-1));
                        if(Rb>1)Qb|=dc>>>(33-Rb);
-                       ya=ec()&~(0x0800|0x0001);
-                       ya|=(((dc^Qb)>>20)&0x0800)|((dc>>(32-Rb))&0x0001);
-                       Aa=24;
+                       cc_src=ec()&~(0x0800|0x0001);
+                       cc_src|=(((dc^Qb)>>20)&0x0800)|((dc>>(32-Rb))&0x0001);
+                       cc_op=24;
                    }
                    break;
             case 3:Rb&=0x1f;
@@ -894,31 +894,31 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        Sb=Tb(2);
                        Qb=(Qb>>>Rb)|(Sb<<(32-Rb));
                        if(Rb>1)Qb|=dc<<(33-Rb);
-                       ya=ec()&~(0x0800|0x0001);
-                       ya|=(((dc^Qb)>>20)&0x0800)|((dc>>(Rb-1))&0x0001);
-                       Aa=24;
+                       cc_src=ec()&~(0x0800|0x0001);
+                       cc_src|=(((dc^Qb)>>20)&0x0800)|((dc>>(Rb-1))&0x0001);
+                       cc_op=24;
                    }
                    break;
             case 4:
             case 6:Rb&=0x1f;
                    if(Rb){
-                       ya=Qb<<(Rb-1);
+                       cc_src=Qb<<(Rb-1);
                        cc_dst=Qb=Qb<<Rb;
-                       Aa=17;
+                       cc_op=17;
                    }
                    break;
             case 5:Rb&=0x1f;
                    if(Rb){
-                       ya=Qb>>>(Rb-1);
+                       cc_src=Qb>>>(Rb-1);
                        cc_dst=Qb=Qb>>>Rb;
-                       Aa=20;
+                       cc_op=20;
                    }
                    break;
             case 7:Rb&=0x1f;
                    if(Rb){
-                       ya=Qb>>(Rb-1);
+                       cc_src=Qb>>(Rb-1);
                        cc_dst=Qb=Qb>>Rb;
-                       Aa=20;
+                       cc_op=20;
                    }
                    break;
             default:throw"unsupported shift32="+Ja;
@@ -928,45 +928,45 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     function hc(Qb,Rb,ic){
         ic&=0x1f;
         if(ic){
-            ya=Qb<<(ic-1);
+            cc_src=Qb<<(ic-1);
             cc_dst=Qb=(Qb<<ic)|(Rb>>>(32-ic));
-            Aa=17;
+            cc_op=17;
         }
         return Qb;
     }
     function jc(Qb,Rb,ic){
         ic&=0x1f;
         if(ic){
-            ya=Qb>>(ic-1);
+            cc_src=Qb>>(ic-1);
             cc_dst=Qb=(Qb>>>ic)|(Rb<<(32-ic));
-            Aa=20;
+            cc_op=20;
         }
         return Qb;
     }
     function kc(Qb,Rb){
         Rb&=0x1f;
-        ya=Qb>>Rb;
-        Aa=20;
+        cc_src=Qb>>Rb;
+        cc_op=20;
     }
     function lc(Qb,Rb){
         Rb&=0x1f;
-        ya=Qb>>Rb;
+        cc_src=Qb>>Rb;
         Qb|=(1<<Rb);
-        Aa=20;
+        cc_op=20;
         return Qb;
     }
     function mc(Qb,Rb){
         Rb&=0x1f;
-        ya=Qb>>Rb;
+        cc_src=Qb>>Rb;
         Qb&=~(1<<Rb);
-        Aa=20;
+        cc_op=20;
         return Qb;
     }
     function nc(Qb,Rb){
         Rb&=0x1f;
-        ya=Qb>>Rb;
+        cc_src=Qb>>Rb;
         Qb^=(1<<Rb);
-        Aa=20;
+        cc_op=20;
         return Qb;
     }
     function oc(Qb,Rb){
@@ -978,7 +978,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             }cc_dst=1;
         }else{
             cc_dst=0;
-        }Aa=14;
+        }cc_op=14;
         return Qb;
     }
     function pc(Qb,Rb){
@@ -990,7 +990,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             }cc_dst=1;
         }else{
             cc_dst=0;
-        }Aa=14;
+        }cc_op=14;
         return Qb;
     }
     function qc(b){
@@ -1090,30 +1090,30 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         a&=0xff;
         b&=0xff;
         cc_dst=(regs[0]&0xff)*(b&0xff);
-        ya=cc_dst>>8;
-        Aa=21;
+        cc_src=cc_dst>>8;
+        cc_op=21;
         return cc_dst;
     }
     function Dc(a,b){
         a=(a<<24)>>24;
         b=(b<<24)>>24;
         cc_dst=(a*b)&-1;
-        ya=(cc_dst!=((cc_dst<<24)>>24))>>0;
-        Aa=21;
+        cc_src=(cc_dst!=((cc_dst<<24)>>24))>>0;
+        cc_op=21;
         return cc_dst;
     }
     function Ec(a,b){
         cc_dst=((a&0xffff)*(b&0xffff))&-1;
-        ya=cc_dst>>>16;
-        Aa=22;
+        cc_src=cc_dst>>>16;
+        cc_op=22;
         return cc_dst;
     }
     function Fc(a,b){
         a=(a<<16)>>16;
         b=(b<<16)>>16;
         cc_dst=(a*b)&-1;
-        ya=(cc_dst!=((cc_dst<<16)>>16))>>0;
-        Aa=22;
+        cc_src=(cc_dst!=((cc_dst<<16)>>16))>>0;
+        cc_op=22;
         return cc_dst;
     }
     function Gc(a,b){
@@ -1150,8 +1150,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function Jc(a,b){
         cc_dst=Gc(a,b);
-        ya=Ma;
-        Aa=23;
+        cc_src=Ma;
+        cc_op=23;
         return cc_dst;
     }
     function Kc(a,b){
@@ -1171,145 +1171,145 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                 Ma=(Ma+1)&-1;
             }
         }cc_dst=r;
-        ya=(Ma-(r>>31))&-1;
-        Aa=23;
+        cc_src=(Ma-(r>>31))&-1;
+        cc_op=23;
         return r;
     }
-    function Lc(Aa){
+    function Lc(cc_op){
         var Qb,Mc;
-        switch(Aa){
-            case 0:Mc=(cc_dst&0xff)<(ya&0xff);
+        switch(cc_op){
+            case 0:Mc=(cc_dst&0xff)<(cc_src&0xff);
                    break;
-            case 1:Mc=(cc_dst&0xffff)<(ya&0xffff);
+            case 1:Mc=(cc_dst&0xffff)<(cc_src&0xffff);
                    break;
-            case 2:Mc=(cc_dst>>>0)<(ya>>>0);
+            case 2:Mc=(cc_dst>>>0)<(cc_src>>>0);
                    break;
-            case 3:Mc=(cc_dst&0xff)<=(ya&0xff);
+            case 3:Mc=(cc_dst&0xff)<=(cc_src&0xff);
                    break;
-            case 4:Mc=(cc_dst&0xffff)<=(ya&0xffff);
+            case 4:Mc=(cc_dst&0xffff)<=(cc_src&0xffff);
                    break;
-            case 5:Mc=(cc_dst>>>0)<=(ya>>>0);
+            case 5:Mc=(cc_dst>>>0)<=(cc_src>>>0);
                    break;
-            case 6:Mc=((cc_dst+ya)&0xff)<(ya&0xff);
+            case 6:Mc=((cc_dst+cc_src)&0xff)<(cc_src&0xff);
                    break;
-            case 7:Mc=((cc_dst+ya)&0xffff)<(ya&0xffff);
+            case 7:Mc=((cc_dst+cc_src)&0xffff)<(cc_src&0xffff);
                    break;
-            case 8:Mc=((cc_dst+ya)>>>0)<(ya>>>0);
+            case 8:Mc=((cc_dst+cc_src)>>>0)<(cc_src>>>0);
                    break;
-            case 9:Qb=(cc_dst+ya+1)&0xff;
-                   Mc=Qb<=(ya&0xff);
+            case 9:Qb=(cc_dst+cc_src+1)&0xff;
+                   Mc=Qb<=(cc_src&0xff);
                    break;
-            case 10:Qb=(cc_dst+ya+1)&0xffff;
-                    Mc=Qb<=(ya&0xffff);
+            case 10:Qb=(cc_dst+cc_src+1)&0xffff;
+                    Mc=Qb<=(cc_src&0xffff);
                     break;
-            case 11:Qb=(cc_dst+ya+1)>>>0;
-                    Mc=Qb<=(ya>>>0);
+            case 11:Qb=(cc_dst+cc_src+1)>>>0;
+                    Mc=Qb<=(cc_src>>>0);
                     break;
             case 12:
             case 13:
             case 14:Mc=0;
                     break;
-            case 15:Mc=(ya>>7)&1;
+            case 15:Mc=(cc_src>>7)&1;
                     break;
-            case 16:Mc=(ya>>15)&1;
+            case 16:Mc=(cc_src>>15)&1;
                     break;
-            case 17:Mc=(ya>>31)&1;
+            case 17:Mc=(cc_src>>31)&1;
                     break;
             case 18:
             case 19:
-            case 20:Mc=ya&1;
+            case 20:Mc=cc_src&1;
                     break;
             case 21:
             case 22:
-            case 23:Mc=ya!=0;
+            case 23:Mc=cc_src!=0;
                     break;
-            case 24:Mc=ya&1;
+            case 24:Mc=cc_src&1;
                     break;
-            default:throw"GET_CARRY: unsupported cc_op="+Aa;
+            default:throw"GET_CARRY: unsupported cc_op="+cc_op;
         }
         return Mc;
     }
     function Tb(Nc){
         var Mc,Qb;
         switch(Nc>>1){
-            case 0:switch(Aa){
-                       case 0:Qb=(cc_dst-ya)&-1;
-                              Mc=(((Qb^ya^-1)&(Qb^cc_dst))>>7)&1;
+            case 0:switch(cc_op){
+                       case 0:Qb=(cc_dst-cc_src)&-1;
+                              Mc=(((Qb^cc_src^-1)&(Qb^cc_dst))>>7)&1;
                               break;
-                       case 1:Qb=(cc_dst-ya)&-1;
-                              Mc=(((Qb^ya^-1)&(Qb^cc_dst))>>15)&1;
+                       case 1:Qb=(cc_dst-cc_src)&-1;
+                              Mc=(((Qb^cc_src^-1)&(Qb^cc_dst))>>15)&1;
                               break;
-                       case 2:Qb=(cc_dst-ya)&-1;
-                              Mc=(((Qb^ya^-1)&(Qb^cc_dst))>>31)&1;
+                       case 2:Qb=(cc_dst-cc_src)&-1;
+                              Mc=(((Qb^cc_src^-1)&(Qb^cc_dst))>>31)&1;
                               break;
-                       case 3:Qb=(cc_dst-ya-1)&-1;
-                              Mc=(((Qb^ya^-1)&(Qb^cc_dst))>>7)&1;
+                       case 3:Qb=(cc_dst-cc_src-1)&-1;
+                              Mc=(((Qb^cc_src^-1)&(Qb^cc_dst))>>7)&1;
                               break;
-                       case 4:Qb=(cc_dst-ya-1)&-1;
-                              Mc=(((Qb^ya^-1)&(Qb^cc_dst))>>15)&1;
+                       case 4:Qb=(cc_dst-cc_src-1)&-1;
+                              Mc=(((Qb^cc_src^-1)&(Qb^cc_dst))>>15)&1;
                               break;
-                       case 5:Qb=(cc_dst-ya-1)&-1;
-                              Mc=(((Qb^ya^-1)&(Qb^cc_dst))>>31)&1;
+                       case 5:Qb=(cc_dst-cc_src-1)&-1;
+                              Mc=(((Qb^cc_src^-1)&(Qb^cc_dst))>>31)&1;
                               break;
-                       case 6:Qb=(cc_dst+ya)&-1;
-                              Mc=(((Qb^ya)&(Qb^cc_dst))>>7)&1;
+                       case 6:Qb=(cc_dst+cc_src)&-1;
+                              Mc=(((Qb^cc_src)&(Qb^cc_dst))>>7)&1;
                               break;
-                       case 7:Qb=(cc_dst+ya)&-1;
-                              Mc=(((Qb^ya)&(Qb^cc_dst))>>15)&1;
+                       case 7:Qb=(cc_dst+cc_src)&-1;
+                              Mc=(((Qb^cc_src)&(Qb^cc_dst))>>15)&1;
                               break;
-                       case 8:Qb=(cc_dst+ya)&-1;
-                              Mc=(((Qb^ya)&(Qb^cc_dst))>>31)&1;
+                       case 8:Qb=(cc_dst+cc_src)&-1;
+                              Mc=(((Qb^cc_src)&(Qb^cc_dst))>>31)&1;
                               break;
-                       case 9:Qb=(cc_dst+ya+1)&-1;
-                              Mc=(((Qb^ya)&(Qb^cc_dst))>>7)&1;
+                       case 9:Qb=(cc_dst+cc_src+1)&-1;
+                              Mc=(((Qb^cc_src)&(Qb^cc_dst))>>7)&1;
                               break;
-                       case 10:Qb=(cc_dst+ya+1)&-1;
-                               Mc=(((Qb^ya)&(Qb^cc_dst))>>15)&1;
+                       case 10:Qb=(cc_dst+cc_src+1)&-1;
+                               Mc=(((Qb^cc_src)&(Qb^cc_dst))>>15)&1;
                                break;
-                       case 11:Qb=(cc_dst+ya+1)&-1;
-                               Mc=(((Qb^ya)&(Qb^cc_dst))>>31)&1;
+                       case 11:Qb=(cc_dst+cc_src+1)&-1;
+                               Mc=(((Qb^cc_src)&(Qb^cc_dst))>>31)&1;
                                break;
                        case 12:
                        case 13:
                        case 14:Mc=0;
                                break;
                        case 15:
-                       case 18:Mc=((ya^cc_dst)>>7)&1;
+                       case 18:Mc=((cc_src^cc_dst)>>7)&1;
                                break;
                        case 16:
-                       case 19:Mc=((ya^cc_dst)>>15)&1;
+                       case 19:Mc=((cc_src^cc_dst)>>15)&1;
                                break;
                        case 17:
-                       case 20:Mc=((ya^cc_dst)>>31)&1;
+                       case 20:Mc=((cc_src^cc_dst)>>31)&1;
                                break;
                        case 21:
                        case 22:
-                       case 23:Mc=ya!=0;
+                       case 23:Mc=cc_src!=0;
                                break;
-                       case 24:Mc=(ya>>11)&1;
+                       case 24:Mc=(cc_src>>11)&1;
                                break;
-                       case 25:Mc=(Ca&0xff)==0x80;
+                       case 25:Mc=(cc_dst2&0xff)==0x80;
                                break;
-                       case 26:Mc=(Ca&0xffff)==0x8000;
+                       case 26:Mc=(cc_dst2&0xffff)==0x8000;
                                break;
-                       case 27:Mc=(Ca==-2147483648);
+                       case 27:Mc=(cc_dst2==-2147483648);
                                break;
-                       case 28:Mc=(Ca&0xff)==0x7f;
+                       case 28:Mc=(cc_dst2&0xff)==0x7f;
                                break;
-                       case 29:Mc=(Ca&0xffff)==0x7fff;
+                       case 29:Mc=(cc_dst2&0xffff)==0x7fff;
                                break;
-                       case 30:Mc=Ca==0x7fffffff;
+                       case 30:Mc=cc_dst2==0x7fffffff;
                                break;
-                       default:throw"JO: unsupported cc_op="+Aa;
+                       default:throw"JO: unsupported cc_op="+cc_op;
                    }
                    break;
-            case 1:if(Aa>=25){
-                       Mc=Lc(Ba);
+            case 1:if(cc_op>=25){
+                       Mc=Lc(cc_op2);
                    }else{
-                       Mc=Lc(Aa);
+                       Mc=Lc(cc_op);
                    }
                    break;
-            case 2:switch(Aa){
+            case 2:switch(cc_op){
                        case 0:
                        case 3:
                        case 6:
@@ -1337,34 +1337,34 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        case 20:
                        case 23:Mc=cc_dst==0;
                                break;
-                       case 24:Mc=(ya>>6)&1;
+                       case 24:Mc=(cc_src>>6)&1;
                                break;
                        case 25:
-                       case 28:Mc=(Ca&0xff)==0;
+                       case 28:Mc=(cc_dst2&0xff)==0;
                                break;
                        case 26:
-                       case 29:Mc=(Ca&0xffff)==0;
+                       case 29:Mc=(cc_dst2&0xffff)==0;
                                break;
                        case 27:
-                       case 30:Mc=Ca==0;
+                       case 30:Mc=cc_dst2==0;
                                break;
-                       default:throw"JZ: unsupported cc_op="+Aa;
+                       default:throw"JZ: unsupported cc_op="+cc_op;
                    };
                    break;
-            case 3:switch(Aa){
-                       case 6:Mc=((cc_dst+ya)&0xff)<=(ya&0xff);
+            case 3:switch(cc_op){
+                       case 6:Mc=((cc_dst+cc_src)&0xff)<=(cc_src&0xff);
                               break;
-                       case 7:Mc=((cc_dst+ya)&0xffff)<=(ya&0xffff);
+                       case 7:Mc=((cc_dst+cc_src)&0xffff)<=(cc_src&0xffff);
                               break;
-                       case 8:Mc=((cc_dst+ya)>>>0)<=(ya>>>0);
+                       case 8:Mc=((cc_dst+cc_src)>>>0)<=(cc_src>>>0);
                               break;
-                       case 24:Mc=(ya&(0x0040|0x0001))!=0;
+                       case 24:Mc=(cc_src&(0x0040|0x0001))!=0;
                                break;
                        default:Mc=Tb(2)|Tb(4);
                                break;
                    }
                    break;
-            case 4:switch(Aa){
+            case 4:switch(cc_op){
                        case 0:
                        case 3:
                        case 6:
@@ -1392,21 +1392,21 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        case 20:
                        case 23:Mc=cc_dst<0;
                                break;
-                       case 24:Mc=(ya>>7)&1;
+                       case 24:Mc=(cc_src>>7)&1;
                                break;
                        case 25:
-                       case 28:Mc=(Ca>>7)&1;
+                       case 28:Mc=(cc_dst2>>7)&1;
                                break;
                        case 26:
-                       case 29:Mc=(Ca>>15)&1;
+                       case 29:Mc=(cc_dst2>>15)&1;
                                break;
                        case 27:
-                       case 30:Mc=Ca<0;
+                       case 30:Mc=cc_dst2<0;
                                break;
-                       default:throw"JS: unsupported cc_op="+Aa;
+                       default:throw"JS: unsupported cc_op="+cc_op;
                    }
                    break;
-            case 5:switch(Aa){
+            case 5:switch(cc_op){
                        case 0:
                        case 3:
                        case 6:
@@ -1432,24 +1432,24 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        case 20:
                        case 23:Mc=aa[cc_dst&0xff];
                                break;
-                       case 24:Mc=(ya>>2)&1;
+                       case 24:Mc=(cc_src>>2)&1;
                                break;
                        case 25:
                        case 28:
                        case 26:
                        case 29:
                        case 27:
-                       case 30:Mc=aa[Ca&0xff];
+                       case 30:Mc=aa[cc_dst2&0xff];
                                break;
-                       default:throw"JP: unsupported cc_op="+Aa;
+                       default:throw"JP: unsupported cc_op="+cc_op;
                    }
                    break;
-            case 6:switch(Aa){
-                       case 6:Mc=((cc_dst+ya)<<24)<(ya<<24);
+            case 6:switch(cc_op){
+                       case 6:Mc=((cc_dst+cc_src)<<24)<(cc_src<<24);
                               break;
-                       case 7:Mc=((cc_dst+ya)<<16)<(ya<<16);
+                       case 7:Mc=((cc_dst+cc_src)<<16)<(cc_src<<16);
                               break;
-                       case 8:Mc=((cc_dst+ya)&-1)<ya;
+                       case 8:Mc=((cc_dst+cc_src)&-1)<cc_src;
                               break;
                        case 12:Mc=(cc_dst<<24)<0;
                                break;
@@ -1457,27 +1457,27 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                break;
                        case 14:Mc=cc_dst<0;
                                break;
-                       case 24:Mc=((ya>>7)^(ya>>11))&1;
+                       case 24:Mc=((cc_src>>7)^(cc_src>>11))&1;
                                break;
                        case 25:
-                       case 28:Mc=(Ca<<24)<0;
+                       case 28:Mc=(cc_dst2<<24)<0;
                                break;
                        case 26:
-                       case 29:Mc=(Ca<<16)<0;
+                       case 29:Mc=(cc_dst2<<16)<0;
                                break;
                        case 27:
-                       case 30:Mc=Ca<0;
+                       case 30:Mc=cc_dst2<0;
                                break;
                        default:Mc=Tb(8)^Tb(0);
                                break;
                    }
                    break;
-            case 7:switch(Aa){
-                       case 6:Mc=((cc_dst+ya)<<24)<=(ya<<24);
+            case 7:switch(cc_op){
+                       case 6:Mc=((cc_dst+cc_src)<<24)<=(cc_src<<24);
                               break;
-                       case 7:Mc=((cc_dst+ya)<<16)<=(ya<<16);
+                       case 7:Mc=((cc_dst+cc_src)<<16)<=(cc_src<<16);
                               break;
-                       case 8:Mc=((cc_dst+ya)&-1)<=ya;
+                       case 8:Mc=((cc_dst+cc_src)&-1)<=cc_src;
                               break;
                        case 12:Mc=(cc_dst<<24)<=0;
                                break;
@@ -1485,16 +1485,16 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                break;
                        case 14:Mc=cc_dst<=0;
                                break;
-                       case 24:Mc=(((ya>>7)^(ya>>11))|(ya>>6))&1;
+                       case 24:Mc=(((cc_src>>7)^(cc_src>>11))|(cc_src>>6))&1;
                                break;
                        case 25:
-                       case 28:Mc=(Ca<<24)<=0;
+                       case 28:Mc=(cc_dst2<<24)<=0;
                                break;
                        case 26:
-                       case 29:Mc=(Ca<<16)<=0;
+                       case 29:Mc=(cc_dst2<<16)<=0;
                                break;
                        case 27:
-                       case 30:Mc=Ca<=0;
+                       case 30:Mc=cc_dst2<=0;
                                break;
                        default:Mc=(Tb(8)^Tb(0))|Tb(4);
                                break;
@@ -1506,26 +1506,26 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function Oc(){
         var Qb,Mc;
-        switch(Aa){
+        switch(cc_op){
             case 0:
             case 1:
-            case 2:Qb=(cc_dst-ya)&-1;
-                   Mc=(cc_dst^Qb^ya)&0x10;
+            case 2:Qb=(cc_dst-cc_src)&-1;
+                   Mc=(cc_dst^Qb^cc_src)&0x10;
                    break;
             case 3:
             case 4:
-            case 5:Qb=(cc_dst-ya-1)&-1;
-                   Mc=(cc_dst^Qb^ya)&0x10;
+            case 5:Qb=(cc_dst-cc_src-1)&-1;
+                   Mc=(cc_dst^Qb^cc_src)&0x10;
                    break;
             case 6:
             case 7:
-            case 8:Qb=(cc_dst+ya)&-1;
-                   Mc=(cc_dst^Qb^ya)&0x10;
+            case 8:Qb=(cc_dst+cc_src)&-1;
+                   Mc=(cc_dst^Qb^cc_src)&0x10;
                    break;
             case 9:
             case 10:
-            case 11:Qb=(cc_dst+ya+1)&-1;
-                    Mc=(cc_dst^Qb^ya)&0x10;
+            case 11:Qb=(cc_dst+cc_src+1)&-1;
+                    Mc=(cc_dst^Qb^cc_src)&0x10;
                     break;
             case 12:
             case 13:
@@ -1541,17 +1541,17 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             case 22:
             case 23:Mc=0;
                     break;
-            case 24:Mc=ya&0x10;
+            case 24:Mc=cc_src&0x10;
                     break;
             case 25:
             case 26:
-            case 27:Mc=(Ca^(Ca-1))&0x10;
+            case 27:Mc=(cc_dst2^(cc_dst2-1))&0x10;
                     break;
             case 28:
             case 29:
-            case 30:Mc=(Ca^(Ca+1))&0x10;
+            case 30:Mc=(cc_dst2^(cc_dst2+1))&0x10;
                     break;
-            default:throw"AF: unsupported cc_op="+Aa;
+            default:throw"AF: unsupported cc_op="+cc_op;
         }
         return Mc;
     }
@@ -1566,8 +1566,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         return Qc;
     }
     function Rc(Qc,Sc){
-        Aa=24;
-        ya=Qc&(0x0800|0x0080|0x0040|0x0010|0x0004|0x0001);
+        cc_op=24;
+        cc_src=Qc&(0x0800|0x0080|0x0040|0x0010|0x0004|0x0001);
         self.df=1-(2*((Qc>>10)&1));
         self.eflags=(self.eflags&~Sc)|(Qc&Sc);
     }
@@ -1578,22 +1578,22 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         throw"CPU abort: "+na;
     }
     function Vc(){
-        self.eip=Db;
-        self.cc_src=ya;
+        self.eip=eip;
+        self.cc_src=cc_src;
         self.cc_dst=cc_dst;
-        self.cc_op=Aa;
-        self.cc_op2=Ba;
-        self.cc_dst2=Ca;
+        self.cc_op=cc_op;
+        self.cc_op2=cc_op2;
+        self.cc_dst2=cc_dst2;
         self.dump();
     }
     function Wc(intno,error_code){
         self.cycle_count+=(cycle_count-cycle_executed);
-        self.eip=Db;
-        self.cc_src=ya;
+        self.eip=eip;
+        self.cc_src=cc_src;
         self.cc_dst=cc_dst;
-        self.cc_op=Aa;
-        self.cc_op2=Ba;
-        self.cc_dst2=Ca;
+        self.cc_op=cc_op;
+        self.cc_op2=cc_op2;
+        self.cc_dst2=cc_dst2;
         throw{
             intno:intno,error_code:error_code};
     }
@@ -1668,7 +1668,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         }
         return false;
     }
-    function hd(Db,b){
+    function hd(eip,b){
         var n,Da,l,Ea,id,base,Ja;
         n=1;
         Da=0;
@@ -1683,7 +1683,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x64:
                    case 0x65:{
                                  if((n+1)>15)rc(6);
-                                 fa=(Db+(n++))>>0;
+                                 fa=(eip+(n++))>>0;
                                  b=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                              };
                              break;
@@ -1908,13 +1908,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x62:{
                                  {
                                      if((n+1)>15)rc(6);
-                                     fa=(Db+(n++))>>0;
+                                     fa=(eip+(n++))>>0;
                                      Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
                                                    if((n+1)>15)rc(6);
-                                                   fa=(Db+(n++))>>0;
+                                                   fa=(eip+(n++))>>0;
                                                    id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                };
                                                if((id&7)==5){
@@ -1972,13 +1972,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xc1:{
                                  {
                                      if((n+1)>15)rc(6);
-                                     fa=(Db+(n++))>>0;
+                                     fa=(eip+(n++))>>0;
                                      Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
                                                    if((n+1)>15)rc(6);
-                                                   fa=(Db+(n++))>>0;
+                                                   fa=(eip+(n++))>>0;
                                                    id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                };
                                                if((id&7)==5){
@@ -2029,13 +2029,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x69:{
                                  {
                                      if((n+1)>15)rc(6);
-                                     fa=(Db+(n++))>>0;
+                                     fa=(eip+(n++))>>0;
                                      Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
                                                    if((n+1)>15)rc(6);
-                                                   fa=(Db+(n++))>>0;
+                                                   fa=(eip+(n++))>>0;
                                                    id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                };
                                                if((id&7)==5){
@@ -2086,13 +2086,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xf6:{
                                  {
                                      if((n+1)>15)rc(6);
-                                     fa=(Db+(n++))>>0;
+                                     fa=(eip+(n++))>>0;
                                      Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
                                                    if((n+1)>15)rc(6);
-                                                   fa=(Db+(n++))>>0;
+                                                   fa=(eip+(n++))>>0;
                                                    id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                };
                                                if((id&7)==5){
@@ -2144,13 +2144,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xf7:{
                                  {
                                      if((n+1)>15)rc(6);
-                                     fa=(Db+(n++))>>0;
+                                     fa=(eip+(n++))>>0;
                                      Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
                                                    if((n+1)>15)rc(6);
-                                                   fa=(Db+(n++))>>0;
+                                                   fa=(eip+(n++))>>0;
                                                    id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                };
                                                if((id&7)==5){
@@ -2228,7 +2228,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xf1:default:rc(6);
                    case 0x0f:{
                                  if((n+1)>15)rc(6);
-                                 fa=(Db+(n++))>>0;
+                                 fa=(eip+(n++))>>0;
                                  b=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                              };
                                      switch(b){
@@ -2323,13 +2323,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                          case 0xb1:{
                                                        {
                                                            if((n+1)>15)rc(6);
-                                                           fa=(Db+(n++))>>0;
+                                                           fa=(eip+(n++))>>0;
                                                            Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                        };
                                                        switch((Ea&7)|((Ea>>3)&0x18)){
                                                            case 0x04:{
                                                                          if((n+1)>15)rc(6);
-                                                                         fa=(Db+(n++))>>0;
+                                                                         fa=(eip+(n++))>>0;
                                                                          id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                                      };
                                                                      if((id&7)==5){
@@ -2378,13 +2378,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                          case 0xba:{
                                                        {
                                                            if((n+1)>15)rc(6);
-                                                           fa=(Db+(n++))>>0;
+                                                           fa=(eip+(n++))>>0;
                                                            Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                        };
                                                        switch((Ea&7)|((Ea>>3)&0x18)){
                                                            case 0x04:{
                                                                          if((n+1)>15)rc(6);
-                                                                         fa=(Db+(n++))>>0;
+                                                                         fa=(eip+(n++))>>0;
                                                                          id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                                      };
                                                                      if((id&7)==5){
@@ -2670,7 +2670,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         var e,Cd,Ad,Xd,Md,Nd,Yd,Zd;
         var ae,be;
         if(intno==0x06){
-            var ce=Db;
+            var ce=eip;
             na="do_interrupt: intno="+qa(intno)+" error_code="+pa(error_code)+" EIP="+pa(ce)+" ESP="+pa(regs[4])+" EAX="+pa(regs[0])+" EBX="+pa(regs[3])+" ECX="+pa(regs[1]);
             if(intno==0x0e){
                 na+=" CR2="+pa(self.cr2);
@@ -2703,7 +2703,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             }
         }
         if (Pd) ae=Qd;
-        else ae=Db;
+        else ae=eip;
         sa=self.idt;
         if(intno*8+7>sa.limit) Wc(13,intno*8+2);
         fa=(sa.base+intno*8)&-1;
@@ -2838,7 +2838,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         selector=(selector&~3)|Jd;
         Gd(1,selector,Ed(Cd,Ad),Dd(Cd,Ad),Ad);
         Xc(Jd);
-        Db=Xd,Eb=Gb=0;
+        eip=Xd,Eb=Gb=0;
         if((Kd&1)==0){
             self.eflags&=~0x00000200;
         }self.eflags&=~(0x00000100|0x00020000|0x00010000|0x00004000);
@@ -2946,7 +2946,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             limit=Dd(Cd,Ad);
             if((le>>>0)>(limit>>>0))Wc(13,ke&0xfffc);
             Gd(1,(ke&0xfffc)|Ud,Ed(Cd,Ad),limit,Ad);
-            Db=le,Eb=Gb=0;
+            eip=le,Eb=Gb=0;
         }else{
             Uc("unsupported jump to call or task gate");
         }
@@ -3050,7 +3050,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             ne(5,ie);
             ze=(ze+qe)&-1;
         }regs[4]=(regs[4]&~(be))|((ze)&(be));
-        Db=le,Eb=Gb=0;
+        eip=le,Eb=Gb=0;
         if(pe){
             xe=0x00000100|0x00040000|0x00200000|0x00010000|0x00004000;
             if(Ud==0)xe|=0x00003000;
@@ -3091,7 +3091,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         Ee=(Ee%base);
         regs[0]=(regs[0]&~0xffff)|Ee|(Fe<<8);
         cc_dst=Ee;
-        Aa=12;
+        cc_op=12;
     }
     function Ge(base){
         var Ee,Fe;
@@ -3100,7 +3100,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         Ee=(Fe*base+Ee)&0xff;
         regs[0]=(regs[0]&~0xffff)|Ee;
         cc_dst=Ee;
-        Aa=12;
+        cc_op=12;
     }
     function He(){
         var Ie,Ee,Fe,Je,Qc;
@@ -3117,8 +3117,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             Qc&=~(0x0001|0x0010);
             Ee&=0x0f;
         }regs[0]=(regs[0]&~0xffff)|Ee|(Fe<<8);
-        ya=Qc;
-        Aa=24;
+        cc_src=Qc;
+        cc_op=24;
     }
     function Ke(){
         var Ie,Ee,Fe,Je,Qc;
@@ -3135,8 +3135,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             Qc&=~(0x0001|0x0010);
             Ee&=0x0f;
         }regs[0]=(regs[0]&~0xffff)|Ee|(Fe<<8);
-        ya=Qc;
-        Aa=24;
+        cc_src=Qc;
+        cc_op=24;
     }
     function Le(){
         var Ee,Je,Me,Qc;
@@ -3155,8 +3155,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         Qc|=(Ee==0)<<6;
         Qc|=aa[Ee]<<2;
         Qc|=(Ee&0x80);
-        ya=Qc;
-        Aa=24;
+        cc_src=Qc;
+        cc_op=24;
     }
     function Ne(){
         var Ee,Oe,Je,Me,Qc;
@@ -3177,8 +3177,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         Qc|=(Ee==0)<<6;
         Qc|=aa[Ee]<<2;
         Qc|=(Ee&0x80);
-        ya=Qc;
-        Aa=24;
+        cc_src=Qc;
+        cc_op=24;
     }
     function Pe(){
         var Ea,ga,Ha,Ia;
@@ -3229,13 +3229,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         }
     }
     regs=this.regs;
-    ya=this.cc_src;
+    cc_src=this.cc_src;
     cc_dst=this.cc_dst;
-    Aa=this.cc_op;
-    Ba=this.cc_op2;
-    Ca=this.cc_dst2;
-    Db=this.eip;
-    La=256;
+    cc_op=this.cc_op;
+    cc_op2=this.cc_op2;
+    cc_dst2=this.cc_dst2;
+    eip=this.eip;
+    ret=256;
     cycle_executed=cycle_count;
     if(interrupt){
         Od(interrupt.intno,0,interrupt.error_code,0,0);
@@ -3254,72 +3254,72 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     Re:do{
            ;
            Da=0;
-           Db=(Db+Eb-Gb)>>0;
-           Fb=tlb_read[Db>>>12];
-           if(((Fb|Db)&0xfff)>=(4096-15+1)){
+           eip=(eip+Eb-Gb)>>0;
+           Fb=tlb_read[eip>>>12];
+           if(((Fb|eip)&0xfff)>=(4096-15+1)){
                var Se;
-               if(Fb==-1)Za(Db,0,self.cpl==3);
-               Fb=tlb_read[Db>>>12];
-               Gb=Eb=Db^Fb;
+               if(Fb==-1)Za(eip,0,self.cpl==3);
+               Fb=tlb_read[eip>>>12];
+               Gb=Eb=eip^Fb;
                b=phys_mem8[Eb++];
                ;
-               Se=Db&0xfff;
+               Se=eip&0xfff;
                if(Se>=(4096-15+1)){
-                   ga=hd(Db,b);
+                   ga=hd(eip,b);
                    if((Se+ga)>4096){
                        Gb=Eb=this.mem_size;
                        for(Ha=0;
                                Ha<ga;
                                Ha++){
-                           fa=(Db+Ha)>>0;
+                           fa=(eip+Ha)>>0;
                            phys_mem8[Eb+Ha]=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                        }Eb++;
                    }
                }
            }else{
-               Gb=Eb=Db^Fb;
+               Gb=Eb=eip^Fb;
                b=phys_mem8[Eb++];
                ;
            }
            if(0){
-               console.log("exec: EIP="+pa(Db)+" OPCODE="+pa(b));
+               console.log("exec: EIP="+pa(eip)+" OPCODE="+pa(b));
            }
            jd:for(;
                    ;
                   ){
                switch(b){
-                   case 0x66:if(Da==0)hd(Db,b);
+                   case 0x66:if(Da==0)hd(eip,b);
                                  Da|=0x0100;
                              b=phys_mem8[Eb++];
                              ;
                              b|=(Da&0x0100);
                              break;
-                   case 0xf0:if(Da==0)hd(Db,b);
+                   case 0xf0:if(Da==0)hd(eip,b);
                                  Da|=0x0040;
                              b=phys_mem8[Eb++];
                              ;
                              b|=(Da&0x0100);
                              break;
-                   case 0xf2:if(Da==0)hd(Db,b);
+                   case 0xf2:if(Da==0)hd(eip,b);
                                  Da|=0x0020;
                              b=phys_mem8[Eb++];
                              ;
                              b|=(Da&0x0100);
                              break;
-                   case 0xf3:if(Da==0)hd(Db,b);
+                   case 0xf3:if(Da==0)hd(eip,b);
                                  Da|=0x0010;
                              b=phys_mem8[Eb++];
                              ;
                              b|=(Da&0x0100);
                              break;
-                   case 0x64:if(Da==0)hd(Db,b);
+                   case 0x64:if(Da==0)hd(eip,b);
                                  Da=(Da&~0x000f)|(4+1);
                              b=phys_mem8[Eb++];
                              ;
                              b|=(Da&0x0100);
                              ;
                              break;
-                   case 0x65:if(Da==0)hd(Db,b);
+                   case 0x65:if(Da==0)hd(eip,b);
                                  Da=(Da&~0x000f)|(5+1);
                              b=phys_mem8[Eb++];
                              ;
@@ -3598,17 +3598,17 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
                                  {
-                                     ya=Ha;
-                                     cc_dst=(regs[Fa]-ya)&-1;
-                                     Aa=8;
+                                     cc_src=Ha;
+                                     cc_dst=(regs[Fa]-cc_src)&-1;
+                                     cc_op=8;
                                  };
                              }else{
                                  fa=Ib(Ea);
                                  ga=eb();
                                  {
-                                     ya=Ha;
-                                     cc_dst=(ga-ya)&-1;
-                                     Aa=8;
+                                     cc_src=Ha;
+                                     cc_dst=(ga-cc_src)&-1;
+                                     cc_op=8;
                                  };
                              }
                              break jd;
@@ -3658,9 +3658,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  fa=Ib(Ea);
                                  Ha=eb();
                              }{
-                                 ya=Ha;
-                                 cc_dst=(regs[Ga]-ya)&-1;
-                                 Aa=8;
+                                 cc_src=Ha;
+                                 cc_dst=(regs[Ga]-cc_src)&-1;
+                                 cc_op=8;
                              };
                              break jd;
                    case 0x04:
@@ -3768,10 +3768,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x46:
                    case 0x47:Ga=b&7;
                              {
-                                 if(Aa<25){
-                                     Ba=Aa;
-                                 }regs[Ga]=Ca=(regs[Ga]+1)&-1;
-                                 Aa=27;
+                                 if(cc_op<25){
+                                     cc_op2=cc_op;
+                                 }regs[Ga]=cc_dst2=(regs[Ga]+1)&-1;
+                                 cc_op=27;
                              };
                              break jd;
                    case 0x48:
@@ -3783,10 +3783,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x4e:
                    case 0x4f:Ga=b&7;
                              {
-                                 if(Aa<25){
-                                     Ba=Aa;
-                                 }regs[Ga]=Ca=(regs[Ga]-1)&-1;
-                                 Aa=30;
+                                 if(cc_op<25){
+                                     cc_op2=cc_op;
+                                 }regs[Ga]=cc_dst2=(regs[Ga]-1)&-1;
+                                 cc_op=30;
                              };
                              break jd;
                    case 0x6b:Ea=phys_mem8[Eb++];
@@ -3826,7 +3826,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              }Ga=(Ea>>3)&7;
                              Ha=((regs[Ga&3]>>((Ga&4)<<1))&0xff);
                              cc_dst=ga&Ha;
-                             Aa=12;
+                             cc_op=12;
                              break jd;
                    case 0x85:Ea=phys_mem8[Eb++];
                              ;
@@ -3837,19 +3837,19 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  ga=eb();
                              }Ha=regs[(Ea>>3)&7];
                              cc_dst=ga&Ha;
-                             Aa=14;
+                             cc_op=14;
                              break jd;
                    case 0xa8:Ha=phys_mem8[Eb++];
                              ;
                              cc_dst=regs[0]&Ha;
-                             Aa=12;
+                             cc_op=12;
                              break jd;
                    case 0xa9:{
                                  Ha=phys_mem8[Eb]|(phys_mem8[Eb+1]<<8)|(phys_mem8[Eb+2]<<16)|(phys_mem8[Eb+3]<<24);
                                  Eb+=4;
                              };
                              cc_dst=regs[0]&Ha;
-                             Aa=14;
+                             cc_op=14;
                              break jd;
                    case 0xf6:Ea=phys_mem8[Eb++];
                              ;
@@ -3864,7 +3864,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                         }Ha=phys_mem8[Eb++];
                                         ;
                                         cc_dst=ga&Ha;
-                                        Aa=12;
+                                        cc_op=12;
                                         break;
                                  case 2:if((Ea>>6)==3){
                                             Fa=Ea&7;
@@ -3935,7 +3935,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                             Eb+=4;
                                         };
                                         cc_dst=ga&Ha;
-                                        Aa=14;
+                                        cc_op=14;
                                         break;
                                  case 2:if((Ea>>6)==3){
                                             Fa=Ea&7;
@@ -4290,19 +4290,19 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 0:if((Ea>>6)==3){
                                             Fa=Ea&7;
                                             {
-                                                if(Aa<25){
-                                                    Ba=Aa;
-                                                }regs[Fa]=Ca=(regs[Fa]+1)&-1;
-                                                Aa=27;
+                                                if(cc_op<25){
+                                                    cc_op2=cc_op;
+                                                }regs[Fa]=cc_dst2=(regs[Fa]+1)&-1;
+                                                cc_op=27;
                                             };
                                         }else{
                                             fa=Ib(Ea);
                                             ga=kb();
                                             {
-                                                if(Aa<25){
-                                                    Ba=Aa;
-                                                }ga=Ca=(ga+1)&-1;
-                                                Aa=27;
+                                                if(cc_op<25){
+                                                    cc_op2=cc_op;
+                                                }ga=cc_dst2=(ga+1)&-1;
+                                                cc_op=27;
                                             };
                                             qb(ga);
                                         }
@@ -4310,19 +4310,19 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 1:if((Ea>>6)==3){
                                             Fa=Ea&7;
                                             {
-                                                if(Aa<25){
-                                                    Ba=Aa;
-                                                }regs[Fa]=Ca=(regs[Fa]-1)&-1;
-                                                Aa=30;
+                                                if(cc_op<25){
+                                                    cc_op2=cc_op;
+                                                }regs[Fa]=cc_dst2=(regs[Fa]-1)&-1;
+                                                cc_op=30;
                                             };
                                         }else{
                                             fa=Ib(Ea);
                                             ga=kb();
                                             {
-                                                if(Aa<25){
-                                                    Ba=Aa;
-                                                }ga=Ca=(ga-1)&-1;
-                                                Aa=30;
+                                                if(cc_op<25){
+                                                    cc_op2=cc_op;
+                                                }ga=cc_dst2=(ga-1)&-1;
+                                                cc_op=30;
                                             };
                                             qb(ga);
                                         }
@@ -4333,16 +4333,16 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                             fa=Ib(Ea);
                                             ga=eb();
                                         }fa=(regs[4]-4)&-1;
-                                        qb((Db+Eb-Gb));
+                                        qb((eip+Eb-Gb));
                                         regs[4]=fa;
-                                        Db=ga,Eb=Gb=0;
+                                        eip=ga,Eb=Gb=0;
                                         break;
                                  case 4:if((Ea>>6)==3){
                                             ga=regs[Ea&7];
                                         }else{
                                             fa=Ib(Ea);
                                             ga=eb();
-                                        }Db=ga,Eb=Gb=0;
+                                        }eip=ga,Eb=Gb=0;
                                         break;
                                  case 6:if((Ea>>6)==3){
                                             ga=regs[Ea&7];
@@ -4395,7 +4395,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  Eb=(Eb+1)>>0;
                              }
                              break jd;
-                   case 0x74:switch(Aa){
+                   case 0x74:switch(cc_op){
                                  case 0:
                                  case 3:
                                  case 6:
@@ -4423,18 +4423,18 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 20:
                                  case 23:Ha=cc_dst==0;
                                          break;
-                                 case 24:Ha=(ya>>6)&1;
+                                 case 24:Ha=(cc_src>>6)&1;
                                          break;
                                  case 25:
-                                 case 28:Ha=(Ca&0xff)==0;
+                                 case 28:Ha=(cc_dst2&0xff)==0;
                                          break;
                                  case 26:
-                                 case 29:Ha=(Ca&0xffff)==0;
+                                 case 29:Ha=(cc_dst2&0xffff)==0;
                                          break;
                                  case 27:
-                                 case 30:Ha=Ca==0;
+                                 case 30:Ha=cc_dst2==0;
                                          break;
-                                 default:throw"JZ: unsupported cc_op="+Aa;
+                                 default:throw"JZ: unsupported cc_op="+cc_op;
                              };
                              if(Ha){
                                  ga=((phys_mem8[Eb++]<<24)>>24);
@@ -4444,7 +4444,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  Eb=(Eb+1)>>0;
                              }
                              break jd;
-                   case 0x75:switch(Aa){
+                   case 0x75:switch(cc_op){
                                  case 0:
                                  case 3:
                                  case 6:
@@ -4472,18 +4472,18 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 20:
                                  case 23:Ha=cc_dst==0;
                                          break;
-                                 case 24:Ha=(ya>>6)&1;
+                                 case 24:Ha=(cc_src>>6)&1;
                                          break;
                                  case 25:
-                                 case 28:Ha=(Ca&0xff)==0;
+                                 case 28:Ha=(cc_dst2&0xff)==0;
                                          break;
                                  case 26:
-                                 case 29:Ha=(Ca&0xffff)==0;
+                                 case 29:Ha=(cc_dst2&0xffff)==0;
                                          break;
                                  case 27:
-                                 case 30:Ha=Ca==0;
+                                 case 30:Ha=cc_dst2==0;
                                          break;
-                                 default:throw"JZ: unsupported cc_op="+Aa;
+                                 default:throw"JZ: unsupported cc_op="+cc_op;
                              };
                              if(!Ha){
                                  ga=((phys_mem8[Eb++]<<24)>>24);
@@ -4506,33 +4506,33 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              fa=regs[4];
                              ga=eb();
                              regs[4]=(regs[4]+4+Ha)&-1;
-                             Db=ga,Eb=Gb=0;
+                             eip=ga,Eb=Gb=0;
                              break jd;
                    case 0xc3:fa=regs[4];
                              ga=eb();
                              regs[4]=(regs[4]+4)&-1;
-                             Db=ga,Eb=Gb=0;
+                             eip=ga,Eb=Gb=0;
                              break jd;
                    case 0xe8:{
                                  ga=phys_mem8[Eb]|(phys_mem8[Eb+1]<<8)|(phys_mem8[Eb+2]<<16)|(phys_mem8[Eb+3]<<24);
                                  Eb+=4;
                              };
                              fa=(regs[4]-4)&-1;
-                             qb((Db+Eb-Gb));
+                             qb((eip+Eb-Gb));
                              regs[4]=fa;
                              Eb=(Eb+ga)>>0;
                              break jd;
                    case 0x90:break jd;
-                   case 0xcc:Ha=(Db+Eb-Gb);
+                   case 0xcc:Ha=(eip+Eb-Gb);
                              Od(3,1,0,Ha,0);
                              break jd;
                    case 0xcd:ga=phys_mem8[Eb++];
                              ;
-                             Ha=(Db+Eb-Gb);
+                             Ha=(eip+Eb-Gb);
                              Od(ga,1,0,Ha,0);
                              break jd;
                    case 0xce:if(Tb(0)){
-                                 Ha=(Db+Eb-Gb);
+                                 Ha=(eip+Eb-Gb);
                                  Od(4,1,0,Ha,0);
                              }
                              break jd;
@@ -4543,14 +4543,14 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
-                   case 0xf5:ya=ec()^0x0001;
-                             Aa=24;
+                   case 0xf5:cc_src=ec()^0x0001;
+                             cc_op=24;
                              break jd;
-                   case 0xf8:ya=ec()&~0x0001;
-                             Aa=24;
+                   case 0xf8:cc_src=ec()&~0x0001;
+                             cc_op=24;
                              break jd;
-                   case 0xf9:ya=ec()|0x0001;
-                             Aa=24;
+                   case 0xf9:cc_src=ec()|0x0001;
+                             cc_op=24;
                              break jd;
                    case 0xfc:self.df=1;
                              break jd;
@@ -4568,15 +4568,15 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              };
                              break jd;
                    case 0x9e:ga=((regs[0]>>8)&(0x0080|0x0040|0x0010|0x0004|0x0001))|(Tb(0)<<11);
-                             ya=ga;
-                             Aa=24;
+                             cc_src=ga;
+                             cc_op=24;
                              break jd;
                    case 0x9f:ga=Pc();
                              Nb(4,ga);
                              break jd;
                    case 0xf4:if(self.cpl!=0)rc(13);
                                  self.halted=1;
-                             La=257;
+                             ret=257;
                              break Re;
                    case 0xa4:if(Da&(0x0010|0x0020)){
                                  if(regs[1]){
@@ -5655,14 +5655,14 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           ;
                                           b|=(Da&0x0100);
                                           break;
-                               case 0x164:if(Da==0)hd(Db,b);
+                               case 0x164:if(Da==0)hd(eip,b);
                                               Da=(Da&~0x000f)|(4+1);
                                           b=phys_mem8[Eb++];
                                           ;
                                           b|=(Da&0x0100);
                                           ;
                                           break;
-                               case 0x165:if(Da==0)hd(Db,b);
+                               case 0x165:if(Da==0)hd(eip,b);
                                               Da=(Da&~0x000f)|(5+1);
                                           b=phys_mem8[Eb++];
                                           ;
@@ -5888,11 +5888,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                               ga=cb();
                                           }Ha=regs[(Ea>>3)&7];
                                           cc_dst=ga&Ha;
-                                          Aa=13;
+                                          cc_op=13;
                                           break jd;
                                case 0x1a9:Ha=Hb();
                                           cc_dst=regs[0]&Ha;
-                                          Aa=13;
+                                          cc_op=13;
                                           break jd;
                                case 0x1f7:Ea=phys_mem8[Eb++];
                                           ;
@@ -5905,7 +5905,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                          ga=cb();
                                                      }Ha=Hb();
                                                      cc_dst=ga&Ha;
-                                                     Aa=13;
+                                                     cc_op=13;
                                                      break;
                                               case 2:if((Ea>>6)==3){
                                                          Fa=Ea&7;
@@ -6599,13 +6599,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
            }
        }while(--cycle_executed);
     this.cycle_count+=(cycle_count-cycle_executed);
-    this.eip=(Db+Eb-Gb);
-    this.cc_src=ya;
+    this.eip=(eip+Eb-Gb);
+    this.cc_src=cc_src;
     this.cc_dst=cc_dst;
-    this.cc_op=Aa;
-    this.cc_op2=Ba;
-    this.cc_dst2=Ca;
-    return La;
+    this.cc_op=cc_op;
+    this.cc_op2=cc_op2;
+    this.cc_dst2=cc_dst2;
+    return ret;
 };
 CPU_X86.prototype.exec=function(cnt){
     var Ue,ret,next_round,interrupt;
