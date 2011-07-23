@@ -3266,9 +3266,11 @@ CPU_X86.prototype.exec_internal=function(ua,va){
                Gb=Eb=Db^Fb;
                b=Na[Eb++];
                ;
-           }if(0){
+           }
+           if(0){
                console.log("exec: EIP="+pa(Db)+" OPCODE="+pa(b));
-           }jd:for(;
+           }
+           jd:for(;
                    ;
                   ){
                switch(b){
@@ -6591,15 +6593,15 @@ CPU_X86.prototype.exec_internal=function(ua,va){
     this.cc_dst2=Ca;
     return La;
 };
-CPU_X86.prototype.exec=function(ua){
-    var Ue,La,Ve,va;
-    Ve=this.cycle_count+ua;
-    La=256;
+CPU_X86.prototype.exec=function(cnt){
+    var Ue,ret,Ve,va;
+    Ve=this.cycle_count+cnt;
+    ret=256;
     va=null;
     while(this.cycle_count<Ve){
         try{
-            La=this.exec_internal(Ve-this.cycle_count,va);
-            if(La!=256)break;
+            ret=this.exec_internal(Ve-this.cycle_count,va);
+            if(ret!=256)break;
             va=null;
         }
         catch(We){
@@ -6610,7 +6612,7 @@ CPU_X86.prototype.exec=function(ua){
             }
         }
     }
-    return La;
+    return ret;
 };
 CPU_X86.prototype.load_binary_ie9=function(Xe,fa){
     var Ye,Ze,cd,i;
@@ -6901,26 +6903,26 @@ pic.prototype.get_hard_intno=function(){
     }else{
         kf=7;
         intno=this.pics[0].irq_base+kf;
-    }this.update_irq();
+    }
+    this.update_irq();
     return intno;
 };
-function pit(ef,vf,wf){
+function pit(pc,set_irq,get_cycle_count){
     var s,i;
     this.pit_channels=new Array();
-    for(i=0;
-            i<3;
-            i++){
-        s=new xf(wf);
+    for(i=0; i<3; i++){
+        s=new xf(get_cycle_count);
         this.pit_channels[i]=s;
         s.mode=3;
         s.gate=(i!=2)>>0;
         s.pit_load_count(0);
-    }this.speaker_data_on=0;
-    this.set_irq=vf;
-    ef.register_ioport_write(0x40,4,1,this.ioport_write.bind(this));
-    ef.register_ioport_read(0x40,3,1,this.ioport_read.bind(this));
-    ef.register_ioport_read(0x61,1,1,this.speaker_ioport_read.bind(this));
-    ef.register_ioport_write(0x61,1,1,this.speaker_ioport_write.bind(this));
+    }
+    this.speaker_data_on=0;
+    this.set_irq=set_irq;
+    pc.register_ioport_write(0x40,4,1,this.ioport_write.bind(this));
+    pc.register_ioport_read(0x40,3,1,this.ioport_read.bind(this));
+    pc.register_ioport_read(0x61,1,1,this.speaker_ioport_read.bind(this));
+    pc.register_ioport_write(0x61,1,1,this.speaker_ioport_write.bind(this));
 }
 function xf(wf){
     this.count=0;
@@ -7263,7 +7265,7 @@ Lf.prototype.ioport_readl=function(fa){
 function sf(lf){
     this.hard_irq=lf;
 }
-function Of(){
+function get_cycle_count(){
     return this.cycle_count;
 }
 function PCEmulator(Pf){
@@ -7274,14 +7276,15 @@ function PCEmulator(Pf){
     this.init_ioports();
     this.register_ioport_write(0x80,1,1,this.ioport80_write);
     this.pic=new pic(this,0x20,0xa0,sf.bind(cpu));
-    this.pit=new pit(this,this.pic.set_irq.bind(this.pic,0),Of.bind(cpu));
+    this.pit=new pit(this,this.pic.set_irq.bind(this.pic,0),get_cycle_count.bind(cpu));
     this.cmos=new df(this);
     this.serial=new Ef(this,0x3f8,this.pic.set_irq.bind(this.pic,4),Pf.serial_write);
     this.kbd=new Jf(this,this.reset.bind(this));
     this.reset_request=0;
     if(Pf.clipboard_get&&Pf.clipboard_set){
         this.jsclipboard=new Lf(this,0x3c0,Pf.clipboard_get,Pf.clipboard_set,Pf.get_boot_time);
-    }cpu.ld8_port=this.ld8_port.bind(this);
+    }
+    cpu.ld8_port=this.ld8_port.bind(this);
     cpu.ld16_port=this.ld16_port.bind(this);
     cpu.ld32_port=this.ld32_port.bind(this);
     cpu.st8_port=this.st8_port.bind(this);
@@ -7299,23 +7302,23 @@ PCEmulator.prototype.start=function(){
     setTimeout(this.timer_func.bind(this),10);
 };
 PCEmulator.prototype.timer_func=function(){
-    var La,Qf,Rf,Sf,Tf,self,cpu;
+    var ret,Qf,cycle_count_next_round,Sf,Tf,self,cpu;
     self=this;
     cpu=self.cpu;
     var cycle_count_per_round = 1000000;
-    Rf=cpu.cycle_count+cycle_count_per_round;
+    cycle_count_next_round=cpu.cycle_count+cycle_count_per_round;
     Sf=false;
     Tf=false;
-    Uf:while(cpu.cycle_count<Rf){
+    Uf:while(cpu.cycle_count < cycle_count_next_round){
         //self.log('cycle_count:'+cpu.cycle_count);
            self.pit.update_irq();
-           La=cpu.exec(cycle_count_per_round);
-           if(La==256){
+           ret=cpu.exec(cycle_count_per_round);
+           if(ret==256){
                if(self.reset_request){
                    Sf=true;
                    break;
                }
-           }else if(La==257){
+           }else if(ret==257){
                Tf=true;
                break;
            }else{
