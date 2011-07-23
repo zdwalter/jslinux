@@ -15,6 +15,9 @@ function CPU_X86(){
     this.regs=new Array();
     for(i=0; i<8; i++)
         this.regs[i]=0;
+    this.eax = this.regs[0];
+    this.ebx = this.regs[3]; 
+    this.ecx = this.regs[1]; 
     this.eip=0;
     this.cc_op=0;
     this.cc_dst=0;
@@ -64,10 +67,11 @@ CPU_X86.prototype.phys_mem_resize=function(ea){
     this.phys_mem16=new Uint16Array(this.phys_mem,0,ea/2);
     this.phys_mem32=new Int32Array(this.phys_mem,0,ea/4);
 };
-CPU_X86.prototype.ld8_phys=function(fa){return this.phys_mem8[fa]; };
-CPU_X86.prototype.st8_phys=function(fa,ga){this.phys_mem8[fa]=ga; };
-CPU_X86.prototype.ld32_phys=function(fa){return this.phys_mem32[fa>>2]; };
-CPU_X86.prototype.st32_phys=function(fa,ga){this.phys_mem32[fa>>2]=ga; };
+//phys memory
+CPU_X86.prototype.ld8_phys=function(addr){return this.phys_mem8[addr]; };
+CPU_X86.prototype.st8_phys=function(addr,ga){this.phys_mem8[addr]=ga; };
+CPU_X86.prototype.ld32_phys=function(addr){return this.phys_mem32[addr>>2]; };
+CPU_X86.prototype.st32_phys=function(addr,ga){this.phys_mem32[addr>>2]=ga; };
 CPU_X86.prototype.tlb_set_page=function(fa,ha,ia,ja){
     var i,ga,j;
     ha&=-4096;
@@ -6597,7 +6601,8 @@ CPU_X86.prototype.exec=function(ua){
             La=this.exec_internal(Ve-this.cycle_count,va);
             if(La!=256)break;
             va=null;
-        }catch(We){
+        }
+        catch(We){
             if(We.hasOwnProperty("intno")){
                 va=We;
             }else{
@@ -6622,7 +6627,8 @@ CPU_X86.prototype.load_binary_ie9=function(Xe,fa){
     }
     return cd;
 };
-CPU_X86.prototype.load_binary=function(Xe,fa){
+CPU_X86.prototype.load_binary=function(Xe,addr /*fa*/){
+    var fa = addr;
     var Ye,Ze,cd,i,af,bf;
     if(typeof ActiveXObject=="function")return this.load_binary_ie9(Xe,fa);
     Ye=new XMLHttpRequest();
@@ -6647,14 +6653,16 @@ CPU_X86.prototype.load_binary=function(Xe,fa){
     }else{
         Ze=Ye.responseText;
         bf=false;
-    }if(bf){
+    }
+    var binary_data = Ze;
+    if(bf){
         cd=Ze.byteLength;
         af=new Uint8Array(Ze,0,cd);
         for(i=0; i<cd; i++){
             this.st8_phys(fa+i,af[i]);
         }
     }else{
-        cd=Ze.length;
+        cd=binary_data.length;
         for(i=0; i<cd; i++){
             this.st8_phys(fa+i,Ze.charCodeAt(i));
         }
@@ -6684,7 +6692,8 @@ function df(ef){
     ff[0x14]=0x02;
     ef.register_ioport_write(0x70,2,1,this.ioport_write.bind(this));
     ef.register_ioport_read(0x70,2,1,this.ioport_read.bind(this));
-}df.prototype.ioport_write=function(fa,Ze){
+}
+df.prototype.ioport_write=function(fa,Ze){
     if(fa==0x70){
         this.cmos_index=Ze&0x7f;
     }
@@ -7286,15 +7295,15 @@ PCEmulator.prototype.start=function(){
     setTimeout(this.timer_func.bind(this),10);
 };
 PCEmulator.prototype.timer_func=function(){
-    var La,Qf,Rf,Sf,Tf,ef,wa;
+    var La,Qf,Rf,Sf,Tf,ef,cpu;
     ef=this;
-    wa=ef.cpu;
-    Rf=wa.cycle_count+100000;
+    cpu=ef.cpu;
+    Rf=cpu.cycle_count+100000;
     Sf=false;
     Tf=false;
-    Uf:while(wa.cycle_count<Rf){
+    Uf:while(cpu.cycle_count<Rf){
            ef.pit.update_irq();
-           La=wa.exec(Rf-wa.cycle_count);
+           La=cpu.exec(Rf-cpu.cycle_count);
            if(La==256){
                if(ef.reset_request){
                    Sf=true;
@@ -7307,7 +7316,8 @@ PCEmulator.prototype.timer_func=function(){
                Sf=true;
                break;
            }
-       }if(!Sf){
+       }
+       if(!Sf){
            if(Tf){
                setTimeout(this.timer_func.bind(this),10);
            }else{

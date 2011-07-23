@@ -60,7 +60,7 @@ function start()
     params.serial_write = term.write.bind(term);
 
     /* memory size (in bytes) */
-    params.mem_size = 512 * 1024 * 1024;
+    params.mem_size = 16 * 1024 * 1024;
 
     /* clipboard I/O */
     params.clipboard_get = clipboard_get;
