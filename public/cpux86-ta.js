@@ -1035,7 +1035,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function vc(wc,xc,opcode){
         var a,i,yc;
-        wc=wc>>>0;
+        wc=wc>>>0; // signed to unsigned
         xc=xc>>>0;
         opcode=opcode>>>0;
         if(wc>=opcode){
