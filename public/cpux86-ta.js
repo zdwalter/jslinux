@@ -3278,8 +3278,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                opcode=phys_mem8[Eb++];
            }
            if(0){
-               console.log("exec: EIP="+str_to_hex(eip)+" OPCODE="+str_to_hex(opcode);
+               console.log("exec: EIP="+str_to_hex(eip)+" OPCODE="+str_to_hex(opcode));
            }
+           var b = opcode;
            jd:for(; ;){
                switch(b){
                    case 0x66:
