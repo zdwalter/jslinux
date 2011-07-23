@@ -190,7 +190,7 @@ CPU_X86.prototype.dump=function(){
     console.log(na);
 };
 
-CPU_X86.prototype.exec_internal=function(cycle_count,va){
+CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     var wa,fa,xa;
     var ya,za,Aa,Ba,Ca;
     var Da,Ea,Fa,b,Ga,ga,Ha,Ia,Ja,cycle_executed,La,Ma;
@@ -2674,20 +2674,21 @@ CPU_X86.prototype.exec_internal=function(cycle_count,va){
             na="do_interrupt: intno="+qa(intno)+" error_code="+pa(error_code)+" EIP="+pa(ce)+" ESP="+pa(xa[4])+" EAX="+pa(xa[0])+" EBX="+pa(xa[3])+" ECX="+pa(xa[1]);
             if(intno==0x0e){
                 na+=" CR2="+pa(wa.cr2);
-            }console.log(na);
+            }
+            console.log(na);
             if(intno==0x06){
                 var na,i,n;
                 na="Code:";
                 n=4096-(ce&0xfff);
                 if(n>15)n=15;
-                for(i=0;
-                        i<n;
-                        i++){
+                for(i=0; i<n; i++){
                     fa=(ce+i)&-1;
                     na+=" "+qa(ab());
-                }console.log(na);
+                }
+                console.log(na);
             }
-        }Vd=0;
+        }
+        Vd=0;
         if(!Pd&&!Rd){
             switch(intno){
                 case 8:
@@ -2696,13 +2697,15 @@ CPU_X86.prototype.exec_internal=function(cycle_count,va){
                 case 12:
                 case 13:
                 case 14:
-                case 17:Vd=1;
-                        break;
+                case 17:
+                    Vd=1;
+                    break;
             }
-        }if(Pd)ae=Qd;
+        }
+        if (Pd) ae=Qd;
         else ae=Db;
         sa=wa.idt;
-        if(intno*8+7>sa.limit)Wc(13,intno*8+2);
+        if(intno*8+7>sa.limit) Wc(13,intno*8+2);
         fa=(sa.base+intno*8)&-1;
         Cd=wb();
         fa+=4;
@@ -2711,20 +2714,28 @@ CPU_X86.prototype.exec_internal=function(cycle_count,va){
         switch(Kd){
             case 5:
             case 7:
-            case 6:throw"unsupported task gate";
+            case 6:
+                throw"unsupported task gate";
             case 14:
-            case 15:break;
-            default:Wc(13,intno*8+2);
-                    break;
-        }Jd=(Ad>>13)&3;
+            case 15:
+                break;
+            default:
+                Wc(13,intno*8+2);
+                break;
+        }
+        Jd=(Ad>>13)&3;
         Ud=wa.cpl;
-        if(Pd&&Jd<Ud)Wc(13,intno*8+2);
-        if(!(Ad&(1<<15)))Wc(11,intno*8+2);
+        if(Pd&&Jd<Ud)
+            Wc(13,intno*8+2);
+        if(!(Ad&(1<<15)))
+            Wc(11,intno*8+2);
         selector=Cd>>16;
         Xd=(Ad&-65536)|(Cd&0x0000ffff);
-        if((selector&0xfffc)==0)Wc(13,0);
+        if((selector&0xfffc)==0)
+            Wc(13,0);
         e=Bd(selector);
-        if(!e)Wc(13,selector&0xfffc);
+        if(!e)
+            Wc(13,selector&0xfffc);
         Cd=e[0];
         Ad=e[1];
         if(!(Ad&(1<<12))||!(Ad&((1<<11))))Wc(13,selector&0xfffc);
@@ -3223,10 +3234,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,va){
     Db=this.eip;
     La=256;
     cycle_executed=cycle_count;
-    if(va){
-        ;
-        Od(va.intno,0,va.error_code,0,0);
-    }if(wa.hard_intno>=0){
+    if(interrupt){
+        Od(interrupt.intno,0,interrupt.error_code,0,0);
+    }
+    if(wa.hard_intno>=0){
         ;
         Od(wa.hard_intno,0,0,0,1);
         wa.hard_intno=-1;
@@ -6594,19 +6605,19 @@ CPU_X86.prototype.exec_internal=function(cycle_count,va){
     return La;
 };
 CPU_X86.prototype.exec=function(cnt){
-    var Ue,ret,next_round,va;
+    var Ue,ret,next_round,interrupt;
     next_round=this.cycle_count+cnt;
     ret=256;
-    va=null;
+    interrupt=null;
     while(this.cycle_count<next_round){
         try{
-            ret=this.exec_internal(cnt,va);
+            ret=this.exec_internal(cnt,interrupt);
             if(ret!=256)break;
-            va=null;
+            interrupt=null;
         }
         catch(We){
             if(We.hasOwnProperty("intno")){
-                va=We;
+                interrupt=We;
             }else{
                 throw We;
             }
