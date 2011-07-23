@@ -191,15 +191,15 @@ CPU_X86.prototype.dump=function(){
 };
 
 CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
-    var wa,fa,xa;
-    var ya,za,Aa,Ba,Ca;
+    var self,fa,regs;
+    var ya,cc_dst,Aa,Ba,Ca;
     var Da,Ea,Fa,b,Ga,ga,Ha,Ia,Ja,cycle_executed,La,Ma;
     var phys_mem8,Oa;
     var phys_mem16,phys_mem32;
     var tlb_read_kernel,tlb_write_kernel,tlb_read_user,tlb_write_user,tlb_read,tlb_write;
     function Xa(){
         var Ya;
-        Za(fa,0,wa.cpl==3);
+        Za(fa,0,self.cpl==3);
         Ya=tlb_read[fa>>>12]^fa;
         return phys_mem8[Ya];
     }
@@ -237,7 +237,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function fb(){
         var Ya;
-        Za(fa,1,wa.cpl==3);
+        Za(fa,1,self.cpl==3);
         Ya=tlb_write[fa>>>12]^fa;
         return phys_mem8[Ya];
     }
@@ -275,7 +275,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function lb(ga){
         var Ya;
-        Za(fa,1,wa.cpl==3);
+        Za(fa,1,self.cpl==3);
         Ya=tlb_write[fa>>>12]^fa;
         phys_mem8[Ya]=ga;
     }
@@ -435,11 +435,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                               Eb+=4;
                           };
                       }else{
-                          fa=xa[base];
+                          fa=regs[base];
                           if(Jb&&base==4)fa=(fa+Jb)&-1;
                       }Lb=(Kb>>3)&7;
                       if(Lb!=4){
-                          fa=(fa+(xa[Lb]<<(Kb>>6)))&-1;
+                          fa=(fa+(regs[Lb]<<(Kb>>6)))&-1;
                       }
                       break;
             case 0x0c:Kb=phys_mem8[Eb++];
@@ -447,11 +447,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                       fa=((phys_mem8[Eb++]<<24)>>24);
                       ;
                       base=Kb&7;
-                      fa=(fa+xa[base])&-1;
+                      fa=(fa+regs[base])&-1;
                       if(Jb&&base==4)fa=(fa+Jb)&-1;
                       Lb=(Kb>>3)&7;
                       if(Lb!=4){
-                          fa=(fa+(xa[Lb]<<(Kb>>6)))&-1;
+                          fa=(fa+(regs[Lb]<<(Kb>>6)))&-1;
                       }
                       break;
             case 0x14:Kb=phys_mem8[Eb++];
@@ -461,11 +461,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                           Eb+=4;
                       };
                       base=Kb&7;
-                      fa=(fa+xa[base])&-1;
+                      fa=(fa+regs[base])&-1;
                       if(Jb&&base==4)fa=(fa+Jb)&-1;
                       Lb=(Kb>>3)&7;
                       if(Lb!=4){
-                          fa=(fa+(xa[Lb]<<(Kb>>6)))&-1;
+                          fa=(fa+(regs[Lb]<<(Kb>>6)))&-1;
                       }
                       break;
             case 0x05:{
@@ -479,7 +479,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             case 0x03:
             case 0x06:
             case 0x07:base=Ea&7;
-                      fa=xa[base];
+                      fa=regs[base];
                       break;
             case 0x08:
             case 0x09:
@@ -490,7 +490,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             case 0x0f:fa=((phys_mem8[Eb++]<<24)>>24);
                       ;
                       base=Ea&7;
-                      fa=(fa+xa[base])&-1;
+                      fa=(fa+regs[base])&-1;
                       break;
             case 0x10:
             case 0x11:
@@ -503,11 +503,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                           Eb+=4;
                       };
                       base=Ea&7;
-                      fa=(fa+xa[base])&-1;
+                      fa=(fa+regs[base])&-1;
                       break;
             default:throw"get_modrm";
         }if(Da&0x000f){
-            fa=(fa+wa.segs[(Da&0x000f)-1].base)&-1;
+            fa=(fa+self.segs[(Da&0x000f)-1].base)&-1;
         }
         return fa;
     }
@@ -518,56 +518,56 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             Eb+=4;
         };
         if(Da&0x000f){
-            fa=(fa+wa.segs[(Da&0x000f)-1].base)&-1;
+            fa=(fa+self.segs[(Da&0x000f)-1].base)&-1;
         }
         return fa;
     }
     function Nb(Ga,ga){
-        if(Ga&4)xa[Ga&3]=(xa[Ga&3]&-65281)|((ga&0xff)<<8);
-        else xa[Ga&3]=(xa[Ga&3]&-256)|(ga&0xff);
+        if(Ga&4)regs[Ga&3]=(regs[Ga&3]&-65281)|((ga&0xff)<<8);
+        else regs[Ga&3]=(regs[Ga&3]&-256)|(ga&0xff);
     }
     function Ob(Ga,ga){
-        xa[Ga]=(xa[Ga]&-65536)|(ga&0xffff);
+        regs[Ga]=(regs[Ga]&-65536)|(ga&0xffff);
     }
     function Pb(Ja,Qb,Rb){
         var Sb;
         switch(Ja){
             case 0:ya=Rb;
                    Qb=(Qb+Rb)&-1;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=0;
                    break;
             case 1:Qb=Qb|Rb;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=12;
                    break;
             case 2:Sb=Tb(2);
                    ya=Rb;
                    Qb=(Qb+Rb+Sb)&-1;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=Sb?3:0;
                    break;
             case 3:Sb=Tb(2);
                    ya=Rb;
                    Qb=(Qb-Rb-Sb)&-1;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=Sb?9:6;
                    break;
             case 4:Qb=Qb&Rb;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=12;
                    break;
             case 5:ya=Rb;
                    Qb=(Qb-Rb)&-1;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=6;
                    break;
             case 6:Qb=Qb^Rb;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=12;
                    break;
             case 7:ya=Rb;
-                   za=(Qb-Rb)&-1;
+                   cc_dst=(Qb-Rb)&-1;
                    Aa=6;
                    break;
             default:throw"arith"+8+": invalid op";
@@ -593,40 +593,40 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         switch(Ja){
             case 0:ya=Rb;
                    Qb=(Qb+Rb)&-1;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=1;
                    break;
             case 1:Qb=Qb|Rb;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=13;
                    break;
             case 2:Sb=Tb(2);
                    ya=Rb;
                    Qb=(Qb+Rb+Sb)&-1;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=Sb?4:1;
                    break;
             case 3:Sb=Tb(2);
                    ya=Rb;
                    Qb=(Qb-Rb-Sb)&-1;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=Sb?10:7;
                    break;
             case 4:Qb=Qb&Rb;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=13;
                    break;
             case 5:ya=Rb;
                    Qb=(Qb-Rb)&-1;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=7;
                    break;
             case 6:Qb=Qb^Rb;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=13;
                    break;
             case 7:ya=Rb;
-                   za=(Qb-Rb)&-1;
+                   cc_dst=(Qb-Rb)&-1;
                    Aa=7;
                    break;
             default:throw"arith"+16+": invalid op";
@@ -652,40 +652,40 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         switch(Ja){
             case 0:ya=Rb;
                    Qb=(Qb+Rb)&-1;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=2;
                    break;
             case 1:Qb=Qb|Rb;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=14;
                    break;
             case 2:Sb=Tb(2);
                    ya=Rb;
                    Qb=(Qb+Rb+Sb)&-1;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=Sb?5:2;
                    break;
             case 3:Sb=Tb(2);
                    ya=Rb;
                    Qb=(Qb-Rb-Sb)&-1;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=Sb?11:8;
                    break;
             case 4:Qb=Qb&Rb;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=14;
                    break;
             case 5:ya=Rb;
                    Qb=(Qb-Rb)&-1;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=8;
                    break;
             case 6:Qb=Qb^Rb;
-                   za=Qb;
+                   cc_dst=Qb;
                    Aa=14;
                    break;
             case 7:ya=Rb;
-                   za=(Qb-Rb)&-1;
+                   cc_dst=(Qb-Rb)&-1;
                    Aa=8;
                    break;
             default:throw"arith"+32+": invalid op";
@@ -757,7 +757,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             case 6:Rb&=0x1f;
                    if(Rb){
                        ya=Qb<<(Rb-1);
-                       za=Qb=Qb<<Rb;
+                       cc_dst=Qb=Qb<<Rb;
                        Aa=15;
                    }
                    break;
@@ -765,7 +765,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    if(Rb){
                        Qb&=0xff;
                        ya=Qb>>>(Rb-1);
-                       za=Qb=Qb>>>Rb;
+                       cc_dst=Qb=Qb>>>Rb;
                        Aa=18;
                    }
                    break;
@@ -773,7 +773,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    if(Rb){
                        Qb=(Qb<<24)>>24;
                        ya=Qb>>(Rb-1);
-                       za=Qb=Qb>>Rb;
+                       cc_dst=Qb=Qb>>Rb;
                        Aa=18;
                    }
                    break;
@@ -832,7 +832,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             case 6:Rb&=0x1f;
                    if(Rb){
                        ya=Qb<<(Rb-1);
-                       za=Qb=Qb<<Rb;
+                       cc_dst=Qb=Qb<<Rb;
                        Aa=16;
                    }
                    break;
@@ -840,7 +840,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    if(Rb){
                        Qb&=0xffff;
                        ya=Qb>>>(Rb-1);
-                       za=Qb=Qb>>>Rb;
+                       cc_dst=Qb=Qb>>>Rb;
                        Aa=19;
                    }
                    break;
@@ -848,7 +848,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    if(Rb){
                        Qb=(Qb<<16)>>16;
                        ya=Qb>>(Rb-1);
-                       za=Qb=Qb>>Rb;
+                       cc_dst=Qb=Qb>>Rb;
                        Aa=19;
                    }
                    break;
@@ -903,21 +903,21 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             case 6:Rb&=0x1f;
                    if(Rb){
                        ya=Qb<<(Rb-1);
-                       za=Qb=Qb<<Rb;
+                       cc_dst=Qb=Qb<<Rb;
                        Aa=17;
                    }
                    break;
             case 5:Rb&=0x1f;
                    if(Rb){
                        ya=Qb>>>(Rb-1);
-                       za=Qb=Qb>>>Rb;
+                       cc_dst=Qb=Qb>>>Rb;
                        Aa=20;
                    }
                    break;
             case 7:Rb&=0x1f;
                    if(Rb){
                        ya=Qb>>(Rb-1);
-                       za=Qb=Qb>>Rb;
+                       cc_dst=Qb=Qb>>Rb;
                        Aa=20;
                    }
                    break;
@@ -929,7 +929,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         ic&=0x1f;
         if(ic){
             ya=Qb<<(ic-1);
-            za=Qb=(Qb<<ic)|(Rb>>>(32-ic));
+            cc_dst=Qb=(Qb<<ic)|(Rb>>>(32-ic));
             Aa=17;
         }
         return Qb;
@@ -938,7 +938,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         ic&=0x1f;
         if(ic){
             ya=Qb>>(ic-1);
-            za=Qb=(Qb>>>ic)|(Rb<<(32-ic));
+            cc_dst=Qb=(Qb>>>ic)|(Rb<<(32-ic));
             Aa=20;
         }
         return Qb;
@@ -975,9 +975,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             while((Rb&1)==0){
                 Qb++;
                 Rb>>=1;
-            }za=1;
+            }cc_dst=1;
         }else{
-            za=0;
+            cc_dst=0;
         }Aa=14;
         return Qb;
     }
@@ -987,15 +987,15 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             while(Rb>=0){
                 Qb--;
                 Rb<<=1;
-            }za=1;
+            }cc_dst=1;
         }else{
-            za=0;
+            cc_dst=0;
         }Aa=14;
         return Qb;
     }
     function qc(b){
         var a,q,r;
-        a=xa[0]&0xffff;
+        a=regs[0]&0xffff;
         b&=0xff;
         if((a>>8)>=b)rc(0);
         q=(a/b)&-1;
@@ -1004,7 +1004,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function sc(b){
         var a,q,r;
-        a=(xa[0]<<16)>>16;
+        a=(regs[0]<<16)>>16;
         b=(b<<24)>>24;
         if(b==0)rc(0);
         q=(a/b)&-1;
@@ -1014,7 +1014,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function tc(b){
         var a,q,r;
-        a=(xa[2]<<16)|(xa[0]&0xffff);
+        a=(regs[2]<<16)|(regs[0]&0xffff);
         b&=0xffff;
         if((a>>>16)>=b)rc(0);
         q=(a/b)&-1;
@@ -1024,7 +1024,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function uc(b){
         var a,q,r;
-        a=(xa[2]<<16)|(xa[0]&0xffff);
+        a=(regs[2]<<16)|(regs[0]&0xffff);
         b=(b<<16)>>16;
         if(b==0)rc(0);
         q=(a/b)&-1;
@@ -1089,32 +1089,32 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     function Cc(a,b){
         a&=0xff;
         b&=0xff;
-        za=(xa[0]&0xff)*(b&0xff);
-        ya=za>>8;
+        cc_dst=(regs[0]&0xff)*(b&0xff);
+        ya=cc_dst>>8;
         Aa=21;
-        return za;
+        return cc_dst;
     }
     function Dc(a,b){
         a=(a<<24)>>24;
         b=(b<<24)>>24;
-        za=(a*b)&-1;
-        ya=(za!=((za<<24)>>24))>>0;
+        cc_dst=(a*b)&-1;
+        ya=(cc_dst!=((cc_dst<<24)>>24))>>0;
         Aa=21;
-        return za;
+        return cc_dst;
     }
     function Ec(a,b){
-        za=((a&0xffff)*(b&0xffff))&-1;
-        ya=za>>>16;
+        cc_dst=((a&0xffff)*(b&0xffff))&-1;
+        ya=cc_dst>>>16;
         Aa=22;
-        return za;
+        return cc_dst;
     }
     function Fc(a,b){
         a=(a<<16)>>16;
         b=(b<<16)>>16;
-        za=(a*b)&-1;
-        ya=(za!=((za<<16)>>16))>>0;
+        cc_dst=(a*b)&-1;
+        ya=(cc_dst!=((cc_dst<<16)>>16))>>0;
         Aa=22;
-        return za;
+        return cc_dst;
     }
     function Gc(a,b){
         var r,xc,wc,Hc,Ic,m;
@@ -1149,10 +1149,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         return r;
     }
     function Jc(a,b){
-        za=Gc(a,b);
+        cc_dst=Gc(a,b);
         ya=Ma;
         Aa=23;
-        return za;
+        return cc_dst;
     }
     function Kc(a,b){
         var s,r;
@@ -1170,7 +1170,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             if(r==0){
                 Ma=(Ma+1)&-1;
             }
-        }za=r;
+        }cc_dst=r;
         ya=(Ma-(r>>31))&-1;
         Aa=23;
         return r;
@@ -1178,31 +1178,31 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     function Lc(Aa){
         var Qb,Mc;
         switch(Aa){
-            case 0:Mc=(za&0xff)<(ya&0xff);
+            case 0:Mc=(cc_dst&0xff)<(ya&0xff);
                    break;
-            case 1:Mc=(za&0xffff)<(ya&0xffff);
+            case 1:Mc=(cc_dst&0xffff)<(ya&0xffff);
                    break;
-            case 2:Mc=(za>>>0)<(ya>>>0);
+            case 2:Mc=(cc_dst>>>0)<(ya>>>0);
                    break;
-            case 3:Mc=(za&0xff)<=(ya&0xff);
+            case 3:Mc=(cc_dst&0xff)<=(ya&0xff);
                    break;
-            case 4:Mc=(za&0xffff)<=(ya&0xffff);
+            case 4:Mc=(cc_dst&0xffff)<=(ya&0xffff);
                    break;
-            case 5:Mc=(za>>>0)<=(ya>>>0);
+            case 5:Mc=(cc_dst>>>0)<=(ya>>>0);
                    break;
-            case 6:Mc=((za+ya)&0xff)<(ya&0xff);
+            case 6:Mc=((cc_dst+ya)&0xff)<(ya&0xff);
                    break;
-            case 7:Mc=((za+ya)&0xffff)<(ya&0xffff);
+            case 7:Mc=((cc_dst+ya)&0xffff)<(ya&0xffff);
                    break;
-            case 8:Mc=((za+ya)>>>0)<(ya>>>0);
+            case 8:Mc=((cc_dst+ya)>>>0)<(ya>>>0);
                    break;
-            case 9:Qb=(za+ya+1)&0xff;
+            case 9:Qb=(cc_dst+ya+1)&0xff;
                    Mc=Qb<=(ya&0xff);
                    break;
-            case 10:Qb=(za+ya+1)&0xffff;
+            case 10:Qb=(cc_dst+ya+1)&0xffff;
                     Mc=Qb<=(ya&0xffff);
                     break;
-            case 11:Qb=(za+ya+1)>>>0;
+            case 11:Qb=(cc_dst+ya+1)>>>0;
                     Mc=Qb<=(ya>>>0);
                     break;
             case 12:
@@ -1233,54 +1233,54 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         var Mc,Qb;
         switch(Nc>>1){
             case 0:switch(Aa){
-                       case 0:Qb=(za-ya)&-1;
-                              Mc=(((Qb^ya^-1)&(Qb^za))>>7)&1;
+                       case 0:Qb=(cc_dst-ya)&-1;
+                              Mc=(((Qb^ya^-1)&(Qb^cc_dst))>>7)&1;
                               break;
-                       case 1:Qb=(za-ya)&-1;
-                              Mc=(((Qb^ya^-1)&(Qb^za))>>15)&1;
+                       case 1:Qb=(cc_dst-ya)&-1;
+                              Mc=(((Qb^ya^-1)&(Qb^cc_dst))>>15)&1;
                               break;
-                       case 2:Qb=(za-ya)&-1;
-                              Mc=(((Qb^ya^-1)&(Qb^za))>>31)&1;
+                       case 2:Qb=(cc_dst-ya)&-1;
+                              Mc=(((Qb^ya^-1)&(Qb^cc_dst))>>31)&1;
                               break;
-                       case 3:Qb=(za-ya-1)&-1;
-                              Mc=(((Qb^ya^-1)&(Qb^za))>>7)&1;
+                       case 3:Qb=(cc_dst-ya-1)&-1;
+                              Mc=(((Qb^ya^-1)&(Qb^cc_dst))>>7)&1;
                               break;
-                       case 4:Qb=(za-ya-1)&-1;
-                              Mc=(((Qb^ya^-1)&(Qb^za))>>15)&1;
+                       case 4:Qb=(cc_dst-ya-1)&-1;
+                              Mc=(((Qb^ya^-1)&(Qb^cc_dst))>>15)&1;
                               break;
-                       case 5:Qb=(za-ya-1)&-1;
-                              Mc=(((Qb^ya^-1)&(Qb^za))>>31)&1;
+                       case 5:Qb=(cc_dst-ya-1)&-1;
+                              Mc=(((Qb^ya^-1)&(Qb^cc_dst))>>31)&1;
                               break;
-                       case 6:Qb=(za+ya)&-1;
-                              Mc=(((Qb^ya)&(Qb^za))>>7)&1;
+                       case 6:Qb=(cc_dst+ya)&-1;
+                              Mc=(((Qb^ya)&(Qb^cc_dst))>>7)&1;
                               break;
-                       case 7:Qb=(za+ya)&-1;
-                              Mc=(((Qb^ya)&(Qb^za))>>15)&1;
+                       case 7:Qb=(cc_dst+ya)&-1;
+                              Mc=(((Qb^ya)&(Qb^cc_dst))>>15)&1;
                               break;
-                       case 8:Qb=(za+ya)&-1;
-                              Mc=(((Qb^ya)&(Qb^za))>>31)&1;
+                       case 8:Qb=(cc_dst+ya)&-1;
+                              Mc=(((Qb^ya)&(Qb^cc_dst))>>31)&1;
                               break;
-                       case 9:Qb=(za+ya+1)&-1;
-                              Mc=(((Qb^ya)&(Qb^za))>>7)&1;
+                       case 9:Qb=(cc_dst+ya+1)&-1;
+                              Mc=(((Qb^ya)&(Qb^cc_dst))>>7)&1;
                               break;
-                       case 10:Qb=(za+ya+1)&-1;
-                               Mc=(((Qb^ya)&(Qb^za))>>15)&1;
+                       case 10:Qb=(cc_dst+ya+1)&-1;
+                               Mc=(((Qb^ya)&(Qb^cc_dst))>>15)&1;
                                break;
-                       case 11:Qb=(za+ya+1)&-1;
-                               Mc=(((Qb^ya)&(Qb^za))>>31)&1;
+                       case 11:Qb=(cc_dst+ya+1)&-1;
+                               Mc=(((Qb^ya)&(Qb^cc_dst))>>31)&1;
                                break;
                        case 12:
                        case 13:
                        case 14:Mc=0;
                                break;
                        case 15:
-                       case 18:Mc=((ya^za)>>7)&1;
+                       case 18:Mc=((ya^cc_dst)>>7)&1;
                                break;
                        case 16:
-                       case 19:Mc=((ya^za)>>15)&1;
+                       case 19:Mc=((ya^cc_dst)>>15)&1;
                                break;
                        case 17:
-                       case 20:Mc=((ya^za)>>31)&1;
+                       case 20:Mc=((ya^cc_dst)>>31)&1;
                                break;
                        case 21:
                        case 22:
@@ -1317,7 +1317,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        case 12:
                        case 15:
                        case 18:
-                       case 21:Mc=(za&0xff)==0;
+                       case 21:Mc=(cc_dst&0xff)==0;
                                break;
                        case 1:
                        case 4:
@@ -1326,7 +1326,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        case 13:
                        case 16:
                        case 19:
-                       case 22:Mc=(za&0xffff)==0;
+                       case 22:Mc=(cc_dst&0xffff)==0;
                                break;
                        case 2:
                        case 5:
@@ -1335,7 +1335,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        case 14:
                        case 17:
                        case 20:
-                       case 23:Mc=za==0;
+                       case 23:Mc=cc_dst==0;
                                break;
                        case 24:Mc=(ya>>6)&1;
                                break;
@@ -1352,11 +1352,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    };
                    break;
             case 3:switch(Aa){
-                       case 6:Mc=((za+ya)&0xff)<=(ya&0xff);
+                       case 6:Mc=((cc_dst+ya)&0xff)<=(ya&0xff);
                               break;
-                       case 7:Mc=((za+ya)&0xffff)<=(ya&0xffff);
+                       case 7:Mc=((cc_dst+ya)&0xffff)<=(ya&0xffff);
                               break;
-                       case 8:Mc=((za+ya)>>>0)<=(ya>>>0);
+                       case 8:Mc=((cc_dst+ya)>>>0)<=(ya>>>0);
                               break;
                        case 24:Mc=(ya&(0x0040|0x0001))!=0;
                                break;
@@ -1372,7 +1372,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        case 12:
                        case 15:
                        case 18:
-                       case 21:Mc=(za>>7)&1;
+                       case 21:Mc=(cc_dst>>7)&1;
                                break;
                        case 1:
                        case 4:
@@ -1381,7 +1381,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        case 13:
                        case 16:
                        case 19:
-                       case 22:Mc=(za>>15)&1;
+                       case 22:Mc=(cc_dst>>15)&1;
                                break;
                        case 2:
                        case 5:
@@ -1390,7 +1390,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        case 14:
                        case 17:
                        case 20:
-                       case 23:Mc=za<0;
+                       case 23:Mc=cc_dst<0;
                                break;
                        case 24:Mc=(ya>>7)&1;
                                break;
@@ -1430,7 +1430,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        case 14:
                        case 17:
                        case 20:
-                       case 23:Mc=aa[za&0xff];
+                       case 23:Mc=aa[cc_dst&0xff];
                                break;
                        case 24:Mc=(ya>>2)&1;
                                break;
@@ -1445,17 +1445,17 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    }
                    break;
             case 6:switch(Aa){
-                       case 6:Mc=((za+ya)<<24)<(ya<<24);
+                       case 6:Mc=((cc_dst+ya)<<24)<(ya<<24);
                               break;
-                       case 7:Mc=((za+ya)<<16)<(ya<<16);
+                       case 7:Mc=((cc_dst+ya)<<16)<(ya<<16);
                               break;
-                       case 8:Mc=((za+ya)&-1)<ya;
+                       case 8:Mc=((cc_dst+ya)&-1)<ya;
                               break;
-                       case 12:Mc=(za<<24)<0;
+                       case 12:Mc=(cc_dst<<24)<0;
                                break;
-                       case 13:Mc=(za<<16)<0;
+                       case 13:Mc=(cc_dst<<16)<0;
                                break;
-                       case 14:Mc=za<0;
+                       case 14:Mc=cc_dst<0;
                                break;
                        case 24:Mc=((ya>>7)^(ya>>11))&1;
                                break;
@@ -1473,17 +1473,17 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    }
                    break;
             case 7:switch(Aa){
-                       case 6:Mc=((za+ya)<<24)<=(ya<<24);
+                       case 6:Mc=((cc_dst+ya)<<24)<=(ya<<24);
                               break;
-                       case 7:Mc=((za+ya)<<16)<=(ya<<16);
+                       case 7:Mc=((cc_dst+ya)<<16)<=(ya<<16);
                               break;
-                       case 8:Mc=((za+ya)&-1)<=ya;
+                       case 8:Mc=((cc_dst+ya)&-1)<=ya;
                               break;
-                       case 12:Mc=(za<<24)<=0;
+                       case 12:Mc=(cc_dst<<24)<=0;
                                break;
-                       case 13:Mc=(za<<16)<=0;
+                       case 13:Mc=(cc_dst<<16)<=0;
                                break;
-                       case 14:Mc=za<=0;
+                       case 14:Mc=cc_dst<=0;
                                break;
                        case 24:Mc=(((ya>>7)^(ya>>11))|(ya>>6))&1;
                                break;
@@ -1509,23 +1509,23 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         switch(Aa){
             case 0:
             case 1:
-            case 2:Qb=(za-ya)&-1;
-                   Mc=(za^Qb^ya)&0x10;
+            case 2:Qb=(cc_dst-ya)&-1;
+                   Mc=(cc_dst^Qb^ya)&0x10;
                    break;
             case 3:
             case 4:
-            case 5:Qb=(za-ya-1)&-1;
-                   Mc=(za^Qb^ya)&0x10;
+            case 5:Qb=(cc_dst-ya-1)&-1;
+                   Mc=(cc_dst^Qb^ya)&0x10;
                    break;
             case 6:
             case 7:
-            case 8:Qb=(za+ya)&-1;
-                   Mc=(za^Qb^ya)&0x10;
+            case 8:Qb=(cc_dst+ya)&-1;
+                   Mc=(cc_dst^Qb^ya)&0x10;
                    break;
             case 9:
             case 10:
-            case 11:Qb=(za+ya+1)&-1;
-                    Mc=(za^Qb^ya)&0x10;
+            case 11:Qb=(cc_dst+ya+1)&-1;
+                    Mc=(cc_dst^Qb^ya)&0x10;
                     break;
             case 12:
             case 13:
@@ -1561,39 +1561,39 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     function Pc(){
         var Qc;
         Qc=ec();
-        Qc|=wa.df&0x00000400;
-        Qc|=wa.eflags;
+        Qc|=self.df&0x00000400;
+        Qc|=self.eflags;
         return Qc;
     }
     function Rc(Qc,Sc){
         Aa=24;
         ya=Qc&(0x0800|0x0080|0x0040|0x0010|0x0004|0x0001);
-        wa.df=1-(2*((Qc>>10)&1));
-        wa.eflags=(wa.eflags&~Sc)|(Qc&Sc);
+        self.df=1-(2*((Qc>>10)&1));
+        self.eflags=(self.eflags&~Sc)|(Qc&Sc);
     }
     function get_cycle_count(){
-        return wa.cycle_count+(cycle_count-cycle_executed);
+        return self.cycle_count+(cycle_count-cycle_executed);
     }
     function Uc(na){
         throw"CPU abort: "+na;
     }
     function Vc(){
-        wa.eip=Db;
-        wa.cc_src=ya;
-        wa.cc_dst=za;
-        wa.cc_op=Aa;
-        wa.cc_op2=Ba;
-        wa.cc_dst2=Ca;
-        wa.dump();
+        self.eip=Db;
+        self.cc_src=ya;
+        self.cc_dst=cc_dst;
+        self.cc_op=Aa;
+        self.cc_op2=Ba;
+        self.cc_dst2=Ca;
+        self.dump();
     }
     function Wc(intno,error_code){
-        wa.cycle_count+=(cycle_count-cycle_executed);
-        wa.eip=Db;
-        wa.cc_src=ya;
-        wa.cc_dst=za;
-        wa.cc_op=Aa;
-        wa.cc_op2=Ba;
-        wa.cc_dst2=Ca;
+        self.cycle_count+=(cycle_count-cycle_executed);
+        self.eip=Db;
+        self.cc_src=ya;
+        self.cc_dst=cc_dst;
+        self.cc_op=Aa;
+        self.cc_op2=Ba;
+        self.cc_dst2=Ca;
         throw{
             intno:intno,error_code:error_code};
     }
@@ -1601,8 +1601,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         Wc(intno,0);
     }
     function Xc(Yc){
-        wa.cpl=Yc;
-        if(wa.cpl==3){
+        self.cpl=Yc;
+        if(self.cpl==3){
             tlb_read=tlb_read_user;
             tlb_write=tlb_write_user;
         }else{
@@ -1617,7 +1617,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         }else{
             Ya=tlb_read[fa>>>12];
         }if(Ya==-1){
-            Za(fa,ad,wa.cpl==3);
+            Za(fa,ad,self.cpl==3);
             if(ad){
                 Ya=tlb_write[fa>>>12];
             }else{
@@ -1628,42 +1628,42 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function bd(){
         var cd,l,dd,ed,i,fd;
-        cd=xa[1]>>>0;
-        l=(4096-(xa[6]&0xfff))>>2;
+        cd=regs[1]>>>0;
+        l=(4096-(regs[6]&0xfff))>>2;
         if(cd>l)cd=l;
-        l=(4096-(xa[7]&0xfff))>>2;
+        l=(4096-(regs[7]&0xfff))>>2;
         if(cd>l)cd=l;
         if(cd){
-            dd=Zc(xa[6],0);
-            ed=Zc(xa[7],1);
+            dd=Zc(regs[6],0);
+            ed=Zc(regs[7],1);
             fd=cd<<2;
             ed>>=2;
             dd>>=2;
             for(i=0;
                     i<cd;
                     i++)phys_mem32[ed+i]=phys_mem32[dd+i];
-            xa[6]=(xa[6]+fd)&-1;
-            xa[7]=(xa[7]+fd)&-1;
-            xa[1]=(xa[1]-cd)&-1;
+            regs[6]=(regs[6]+fd)&-1;
+            regs[7]=(regs[7]+fd)&-1;
+            regs[1]=(regs[1]-cd)&-1;
             return true;
         }
         return false;
     }
     function gd(){
         var cd,l,ed,i,fd,ga;
-        cd=xa[1]>>>0;
-        l=(4096-(xa[7]&0xfff))>>2;
+        cd=regs[1]>>>0;
+        l=(4096-(regs[7]&0xfff))>>2;
         if(cd>l)cd=l;
         if(cd){
-            ed=Zc(xa[7],1);
-            ga=xa[0];
+            ed=Zc(regs[7],1);
+            ga=regs[0];
             ed>>=2;
             for(i=0;
                     i<cd;
                     i++)phys_mem32[ed+i]=ga;
             fd=cd<<2;
-            xa[7]=(xa[7]+fd)&-1;
-            xa[1]=(xa[1]-cd)&-1;
+            regs[7]=(regs[7]+fd)&-1;
+            regs[1]=(regs[1]-cd)&-1;
             return true;
         }
         return false;
@@ -2556,19 +2556,19 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function Za(kd,ld,ja){
         var md,nd,error_code,od,pd,qd,rd,ad,sd;
-        if(!(wa.cr0&(1<<31))){
-            wa.tlb_set_page(kd&-4096,kd&-4096,1);
+        if(!(self.cr0&(1<<31))){
+            self.tlb_set_page(kd&-4096,kd&-4096,1);
         }else{
-            md=(wa.cr3&-4096)+((kd>>20)&0xffc);
-            nd=wa.ld32_phys(md);
+            md=(self.cr3&-4096)+((kd>>20)&0xffc);
+            nd=self.ld32_phys(md);
             if(!(nd&0x00000001)){
                 error_code=0;
             }else{
                 if(!(nd&0x00000020)){
                     nd|=0x00000020;
-                    wa.st32_phys(md,nd);
+                    self.st32_phys(md,nd);
                 }od=(nd&-4096)+((kd>>10)&0xffc);
-                pd=wa.ld32_phys(od);
+                pd=self.ld32_phys(od);
                 if(!(pd&0x00000001)){
                     error_code=0;
                 }else{
@@ -2582,35 +2582,35 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                         if(!(pd&0x00000020)||rd){
                             pd|=0x00000020;
                             if(rd)pd|=0x00000040;
-                            wa.st32_phys(od,pd);
+                            self.st32_phys(od,pd);
                         }ad=0;
                         if((pd&0x00000040)&&(qd&0x00000002))ad=1;
                         sd=0;
                         if(qd&0x00000004)sd=1;
-                        wa.tlb_set_page(kd&-4096,pd&-4096,ad,sd);
+                        self.tlb_set_page(kd&-4096,pd&-4096,ad,sd);
                         return;
                     }
                 }
             }error_code|=ld<<1;
             if(ja)error_code|=0x04;
-            wa.cr2=kd;
+            self.cr2=kd;
             Wc(14,error_code);
         }
     }
     function td(ud){
         if(!(ud&(1<<0)))Uc("real mode not supported");
-        if((ud&((1<<31)|(1<<16)|(1<<0)))!=(wa.cr0&((1<<31)|(1<<16)|(1<<0)))){
-            wa.tlb_flush_all();
-        }wa.cr0=ud|(1<<4);
+        if((ud&((1<<31)|(1<<16)|(1<<0)))!=(self.cr0&((1<<31)|(1<<16)|(1<<0)))){
+            self.tlb_flush_all();
+        }self.cr0=ud|(1<<4);
     }
     function vd(wd){
-        wa.cr3=wd;
-        if(wa.cr0&(1<<31)){
-            wa.tlb_flush_all();
+        self.cr3=wd;
+        if(self.cr0&(1<<31)){
+            self.tlb_flush_all();
         }
     }
     function xd(yd){
-        wa.cr4=yd;
+        self.cr4=yd;
     }
     function zd(Ad){
         if(Ad&(1<<22))return-1;
@@ -2618,8 +2618,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function Bd(selector){
         var sa,Lb,Cd,Ad;
-        if(selector&0x4)sa=wa.ldt;
-        else sa=wa.gdt;
+        if(selector&0x4)sa=self.ldt;
+        else sa=self.gdt;
         Lb=selector&~7;
         if((Lb+7)>sa.limit)return null;
         fa=sa.base+Lb;
@@ -2643,18 +2643,18 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         sa.flags=Ad;
     }
     function Gd(Hd,selector,base,limit,flags){
-        wa.segs[Hd]={
+        self.segs[Hd]={
             selector:selector,base:base,limit:limit,flags:flags};
     }
     function Id(Jd){
         var Kd,Lb,Ld,Md,Nd;
-        if(!(wa.tr.flags&(1<<15)))Uc("invalid tss");
-        Kd=(wa.tr.flags>>8)&0xf;
+        if(!(self.tr.flags&(1<<15)))Uc("invalid tss");
+        Kd=(self.tr.flags>>8)&0xf;
         if((Kd&7)!=1)Uc("invalid tss type");
         Ld=Kd>>3;
         Lb=(Jd*4+2)<<Ld;
-        if(Lb+(4<<Ld)-1>wa.tr.limit)Wc(10,wa.tr.selector&0xfffc);
-        fa=(wa.tr.base+Lb)&-1;
+        if(Lb+(4<<Ld)-1>self.tr.limit)Wc(10,self.tr.selector&0xfffc);
+        fa=(self.tr.base+Lb)&-1;
         if(Ld==0){
             Nd=ub();
             fa+=2;
@@ -2671,9 +2671,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         var ae,be;
         if(intno==0x06){
             var ce=Db;
-            na="do_interrupt: intno="+qa(intno)+" error_code="+pa(error_code)+" EIP="+pa(ce)+" ESP="+pa(xa[4])+" EAX="+pa(xa[0])+" EBX="+pa(xa[3])+" ECX="+pa(xa[1]);
+            na="do_interrupt: intno="+qa(intno)+" error_code="+pa(error_code)+" EIP="+pa(ce)+" ESP="+pa(regs[4])+" EAX="+pa(regs[0])+" EBX="+pa(regs[3])+" ECX="+pa(regs[1]);
             if(intno==0x0e){
-                na+=" CR2="+pa(wa.cr2);
+                na+=" CR2="+pa(self.cr2);
             }
             console.log(na);
             if(intno==0x06){
@@ -2704,7 +2704,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         }
         if (Pd) ae=Qd;
         else ae=Db;
-        sa=wa.idt;
+        sa=self.idt;
         if(intno*8+7>sa.limit) Wc(13,intno*8+2);
         fa=(sa.base+intno*8)&-1;
         Cd=wb();
@@ -2724,7 +2724,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                 break;
         }
         Jd=(Ad>>13)&3;
-        Ud=wa.cpl;
+        Ud=self.cpl;
         if(Pd&&Jd<Ud)
             Wc(13,intno*8+2);
         if(!(Ad&(1<<15)))
@@ -2760,11 +2760,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             be=zd(Zd);
             Sd=Ed(Yd,Zd);
         }else if((Ad&(1<<10))||Jd==Ud){
-            if(wa.eflags&0x00020000)Wc(13,selector&0xfffc);
+            if(self.eflags&0x00020000)Wc(13,selector&0xfffc);
             Wd=0;
-            be=zd(wa.segs[2].flags);
-            Sd=wa.segs[2].base;
-            Nd=xa[4];
+            be=zd(self.segs[2].flags);
+            Sd=self.segs[2].base;
+            Nd=regs[4];
             Jd=Ud;
         }else{
             Wc(13,selector&0xfffc);
@@ -2774,36 +2774,36 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             Nd=0;
         }Ld=Kd>>3;
         if(Wd){
-            if(wa.eflags&0x00020000){
+            if(self.eflags&0x00020000){
                 {
                     Nd=(Nd-4)&-1;
                     fa=(Sd+(Nd&be))&-1;
-                    Cb(wa.segs[5].selector);
+                    Cb(self.segs[5].selector);
                 };
                 {
                     Nd=(Nd-4)&-1;
                     fa=(Sd+(Nd&be))&-1;
-                    Cb(wa.segs[4].selector);
+                    Cb(self.segs[4].selector);
                 };
                 {
                     Nd=(Nd-4)&-1;
                     fa=(Sd+(Nd&be))&-1;
-                    Cb(wa.segs[3].selector);
+                    Cb(self.segs[3].selector);
                 };
                 {
                     Nd=(Nd-4)&-1;
                     fa=(Sd+(Nd&be))&-1;
-                    Cb(wa.segs[0].selector);
+                    Cb(self.segs[0].selector);
                 };
             }{
                 Nd=(Nd-4)&-1;
                 fa=(Sd+(Nd&be))&-1;
-                Cb(wa.segs[2].selector);
+                Cb(self.segs[2].selector);
             };
             {
                 Nd=(Nd-4)&-1;
                 fa=(Sd+(Nd&be))&-1;
-                Cb(xa[4]);
+                Cb(regs[4]);
             };
         }{
             Nd=(Nd-4)&-1;
@@ -2813,7 +2813,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         {
             Nd=(Nd-4)&-1;
             fa=(Sd+(Nd&be))&-1;
-            Cb(wa.segs[1].selector);
+            Cb(self.segs[1].selector);
         };
         {
             Nd=(Nd-4)&-1;
@@ -2827,31 +2827,31 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                 Cb(error_code);
             };
         }if(Wd){
-            if(wa.eflags&0x00020000){
+            if(self.eflags&0x00020000){
                 Gd(0,0,0,0,0);
                 Gd(3,0,0,0,0);
                 Gd(4,0,0,0,0);
                 Gd(5,0,0,0,0);
             }Md=(Md&~3)|Jd;
             Gd(2,Md,Sd,Dd(Yd,Zd),Zd);
-        }xa[4]=(xa[4]&~(be))|((Nd)&(be));
+        }regs[4]=(regs[4]&~(be))|((Nd)&(be));
         selector=(selector&~3)|Jd;
         Gd(1,selector,Ed(Cd,Ad),Dd(Cd,Ad),Ad);
         Xc(Jd);
         Db=Xd,Eb=Gb=0;
         if((Kd&1)==0){
-            wa.eflags&=~0x00000200;
-        }wa.eflags&=~(0x00000100|0x00020000|0x00010000|0x00004000);
+            self.eflags&=~0x00000200;
+        }self.eflags&=~(0x00000100|0x00020000|0x00010000|0x00004000);
     }
     function de(selector){
         var sa,Cd,Ad,Lb,ee;
         selector&=0xffff;
         if((selector&0xfffc)==0){
-            wa.ldt.base=0;
-            wa.ldt.limit=0;
+            self.ldt.base=0;
+            self.ldt.limit=0;
         }else{
             if(selector&0x4)Wc(13,selector&0xfffc);
-            sa=wa.gdt;
+            sa=self.gdt;
             Lb=selector&~7;
             ee=7;
             if((Lb+ee)>sa.limit)Wc(13,selector&0xfffc);
@@ -2861,19 +2861,19 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             Ad=wb();
             if((Ad&(1<<12))||((Ad>>8)&0xf)!=2)Wc(13,selector&0xfffc);
             if(!(Ad&(1<<15)))Wc(11,selector&0xfffc);
-            Fd(wa.ldt,Cd,Ad);
-        }wa.ldt.selector=selector;
+            Fd(self.ldt,Cd,Ad);
+        }self.ldt.selector=selector;
     }
     function fe(selector){
         var sa,Cd,Ad,Lb,Kd,ee;
         selector&=0xffff;
         if((selector&0xfffc)==0){
-            wa.tr.base=0;
-            wa.tr.limit=0;
-            wa.tr.flags=0;
+            self.tr.base=0;
+            self.tr.limit=0;
+            self.tr.flags=0;
         }else{
             if(selector&0x4)Wc(13,selector&0xfffc);
-            sa=wa.gdt;
+            sa=self.gdt;
             Lb=selector&~7;
             ee=7;
             if((Lb+ee)>sa.limit)Wc(13,selector&0xfffc);
@@ -2884,21 +2884,21 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             Kd=(Ad>>8)&0xf;
             if((Ad&(1<<12))||(Kd!=1&&Kd!=9))Wc(13,selector&0xfffc);
             if(!(Ad&(1<<15)))Wc(11,selector&0xfffc);
-            Fd(wa.tr,Cd,Ad);
+            Fd(self.tr,Cd,Ad);
             Ad|=(1<<9);
             Cb(Ad);
-        }wa.tr.selector=selector;
+        }self.tr.selector=selector;
     }
     function ge(he,selector){
         var Cd,Ad,Ud,Jd,ie,sa,Lb;
         selector&=0xffff;
-        Ud=wa.cpl;
+        Ud=self.cpl;
         if((selector&0xfffc)==0){
             if(he==2)Wc(13,0);
             Gd(he,selector,0,0,0);
         }else{
-            if(selector&0x4)sa=wa.ldt;
-            else sa=wa.gdt;
+            if(selector&0x4)sa=self.ldt;
+            else sa=self.gdt;
             Lb=selector&~7;
             if((Lb+7)>sa.limit)Wc(13,selector&0xfffc);
             fa=(sa.base+Lb)&-1;
@@ -2932,7 +2932,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         if(!e)Wc(13,ke&0xfffc);
         Cd=e[0];
         Ad=e[1];
-        Ud=wa.cpl;
+        Ud=self.cpl;
         if(Ad&(1<<12)){
             if(!(Ad&(1<<11)))Wc(13,ke&0xfffc);
             Jd=(Ad>>13)&3;
@@ -2953,8 +2953,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function ne(he,Ud){
         var Jd,Ad;
-        if((he==4||he==5)&&(wa.segs[he].selector&0xfffc)==0)return;
-        Ad=wa.segs[he].flags;
+        if((he==4||he==5)&&(self.segs[he].selector&0xfffc)==0)return;
+        Ad=self.segs[he].flags;
         Jd=(Ad>>13)&3;
         if(!(Ad&(1<<11))||!(Ad&(1<<10))){
             if(Jd<Ud){
@@ -2968,9 +2968,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         var e,Cd,Ad,Yd,Zd;
         var Ud,Jd,ie,xe,ye;
         var Sd,ze,le,Ae,be;
-        be=zd(wa.segs[2].flags);
-        ze=xa[4];
-        Sd=wa.segs[2].base;
+        be=zd(self.segs[2].flags);
+        ze=regs[4];
+        Sd=self.segs[2].base;
         re=0;
         if(Ld==1){
             {
@@ -3000,7 +3000,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         Cd=e[0];
         Ad=e[1];
         if(!(Ad&(1<<12))||!(Ad&(1<<11)))Wc(13,ke&0xfffc);
-        Ud=wa.cpl;
+        Ud=self.cpl;
         ie=ke&3;
         if(ie<Ud)Wc(13,ke&0xfffc);
         Jd=(Ad>>13)&3;
@@ -3049,19 +3049,19 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             ne(4,ie);
             ne(5,ie);
             ze=(ze+qe)&-1;
-        }xa[4]=(xa[4]&~(be))|((ze)&(be));
+        }regs[4]=(regs[4]&~(be))|((ze)&(be));
         Db=le,Eb=Gb=0;
         if(pe){
             xe=0x00000100|0x00040000|0x00200000|0x00010000|0x00004000;
             if(Ud==0)xe|=0x00003000;
-            ye=(wa.eflags>>12)&3;
+            ye=(self.eflags>>12)&3;
             if(Ud<=ye)xe|=0x00000200;
             if(Ld==0)xe&=0xffff;
             Rc(re,xe);
         }
     }
     function Be(Ld){
-        if(wa.eflags&0x00004000){
+        if(self.eflags&0x00004000){
             Wc(13,0);
         }else{
             oe(Ld,1,0);
@@ -3069,45 +3069,45 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function Ce(){
         var Lb;
-        Lb=xa[0];
+        Lb=regs[0];
         switch(Lb){
-            case 0:xa[0]=1;
-                   xa[3]=0x756e6547&-1;
-                   xa[2]=0x49656e69&-1;
-                   xa[1]=0x6c65746e&-1;
+            case 0:regs[0]=1;
+                   regs[3]=0x756e6547&-1;
+                   regs[2]=0x49656e69&-1;
+                   regs[1]=0x6c65746e&-1;
                    break;
-            case 1:default:xa[0]=(5<<8)|(4<<4)|3;
-                           xa[3]=8<<8;
-                           xa[1]=0;
-                           xa[2]=(1<<4);
+            case 1:default:regs[0]=(5<<8)|(4<<4)|3;
+                           regs[3]=8<<8;
+                           regs[1]=0;
+                           regs[2]=(1<<4);
                            break;
         }
     }
     function De(base){
         var Ee,Fe;
         if(base==0)rc(0);
-        Ee=xa[0]&0xff;
+        Ee=regs[0]&0xff;
         Fe=(Ee/base)&-1;
         Ee=(Ee%base);
-        xa[0]=(xa[0]&~0xffff)|Ee|(Fe<<8);
-        za=Ee;
+        regs[0]=(regs[0]&~0xffff)|Ee|(Fe<<8);
+        cc_dst=Ee;
         Aa=12;
     }
     function Ge(base){
         var Ee,Fe;
-        Ee=xa[0]&0xff;
-        Fe=(xa[0]>>8)&0xff;
+        Ee=regs[0]&0xff;
+        Fe=(regs[0]>>8)&0xff;
         Ee=(Fe*base+Ee)&0xff;
-        xa[0]=(xa[0]&~0xffff)|Ee;
-        za=Ee;
+        regs[0]=(regs[0]&~0xffff)|Ee;
+        cc_dst=Ee;
         Aa=12;
     }
     function He(){
         var Ie,Ee,Fe,Je,Qc;
         Qc=ec();
         Je=Qc&0x0010;
-        Ee=xa[0]&0xff;
-        Fe=(xa[0]>>8)&0xff;
+        Ee=regs[0]&0xff;
+        Fe=(regs[0]>>8)&0xff;
         Ie=(Ee>0xf9);
         if(((Ee&0x0f)>9)||Je){
             Ee=(Ee+6)&0x0f;
@@ -3116,7 +3116,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         }else{
             Qc&=~(0x0001|0x0010);
             Ee&=0x0f;
-        }xa[0]=(xa[0]&~0xffff)|Ee|(Fe<<8);
+        }regs[0]=(regs[0]&~0xffff)|Ee|(Fe<<8);
         ya=Qc;
         Aa=24;
     }
@@ -3124,8 +3124,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         var Ie,Ee,Fe,Je,Qc;
         Qc=ec();
         Je=Qc&0x0010;
-        Ee=xa[0]&0xff;
-        Fe=(xa[0]>>8)&0xff;
+        Ee=regs[0]&0xff;
+        Fe=(regs[0]>>8)&0xff;
         Ie=(Ee<6);
         if(((Ee&0x0f)>9)||Je){
             Ee=(Ee-6)&0x0f;
@@ -3134,7 +3134,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         }else{
             Qc&=~(0x0001|0x0010);
             Ee&=0x0f;
-        }xa[0]=(xa[0]&~0xffff)|Ee|(Fe<<8);
+        }regs[0]=(regs[0]&~0xffff)|Ee|(Fe<<8);
         ya=Qc;
         Aa=24;
     }
@@ -3143,7 +3143,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         Qc=ec();
         Me=Qc&0x0001;
         Je=Qc&0x0010;
-        Ee=xa[0]&0xff;
+        Ee=regs[0]&0xff;
         Qc=0;
         if(((Ee&0x0f)>9)||Je){
             Ee=(Ee+6)&0xff;
@@ -3151,7 +3151,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         }if((Ee>0x9f)||Me){
             Ee=(Ee+0x60)&0xff;
             Qc|=0x0001;
-        }xa[0]=(xa[0]&~0xff)|Ee;
+        }regs[0]=(regs[0]&~0xff)|Ee;
         Qc|=(Ee==0)<<6;
         Qc|=aa[Ee]<<2;
         Qc|=(Ee&0x80);
@@ -3163,7 +3163,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         Qc=ec();
         Me=Qc&0x0001;
         Je=Qc&0x0010;
-        Ee=xa[0]&0xff;
+        Ee=regs[0]&0xff;
         Qc=0;
         Oe=Ee;
         if(((Ee&0x0f)>9)||Je){
@@ -3173,7 +3173,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         }if((Oe>0x99)||Me){
             Ee=(Ee-0x60)&0xff;
             Qc|=0x0001;
-        }xa[0]=(xa[0]&~0xff)|Ee;
+        }regs[0]=(regs[0]&~0xff)|Ee;
         Qc|=(Ee==0)<<6;
         Qc|=aa[Ee]<<2;
         Qc|=(Ee&0x80);
@@ -3190,7 +3190,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         fa=(fa+4)&-1;
         Ha=eb();
         Ga=(Ea>>3)&7;
-        Ia=xa[Ga];
+        Ia=regs[Ga];
         if(Ia<ga||Ia>Ha)rc(5);
     }
     function Qe(){
@@ -3203,9 +3203,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         fa=(fa+2)&-1;
         Ha=(cb()<<16)>>16;
         Ga=(Ea>>3)&7;
-        Ia=(xa[Ga]<<16)>>16;
+        Ia=(regs[Ga]<<16)>>16;
         if(Ia<ga||Ia>Ha)rc(5);
-    }wa=this;
+    }
+    self=this;
     phys_mem8=this.phys_mem8;
     phys_mem16=this.phys_mem16;
     phys_mem32=this.phys_mem32;
@@ -3213,21 +3214,23 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     tlb_write_user=this.tlb_write_user;
     tlb_read_kernel=this.tlb_read_kernel;
     tlb_write_kernel=this.tlb_write_kernel;
-    if(wa.cpl==3){
+    if(self.cpl==3){
         tlb_read=tlb_read_user;
         tlb_write=tlb_write_user;
     }else{
         tlb_read=tlb_read_kernel;
         tlb_write=tlb_write_kernel;
-    }if(wa.halted){
-        if(wa.hard_irq!=0&&(wa.eflags&0x00000200)){
-            wa.halted=0;
+    }
+    if(self.halted){
+        if(self.hard_irq!=0&&(self.eflags&0x00000200)){
+            self.halted=0;
         }else{
-            return 257;
+            return 257; // will update_irq
         }
-    }xa=this.regs;
+    }
+    regs=this.regs;
     ya=this.cc_src;
-    za=this.cc_dst;
+    cc_dst=this.cc_dst;
     Aa=this.cc_op;
     Ba=this.cc_op2;
     Ca=this.cc_dst2;
@@ -3237,15 +3240,15 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     if(interrupt){
         Od(interrupt.intno,0,interrupt.error_code,0,0);
     }
-    if(wa.hard_intno>=0){
+    if(self.hard_intno>=0){
         ;
-        Od(wa.hard_intno,0,0,0,1);
-        wa.hard_intno=-1;
-    }if(wa.hard_irq!=0&&(wa.eflags&0x00000200)){
-        wa.hard_intno=wa.get_hard_intno();
+        Od(self.hard_intno,0,0,0,1);
+        self.hard_intno=-1;
+    }if(self.hard_irq!=0&&(self.eflags&0x00000200)){
+        self.hard_intno=self.get_hard_intno();
         ;
-        Od(wa.hard_intno,0,0,0,1);
-        wa.hard_intno=-1;
+        Od(self.hard_intno,0,0,0,1);
+        self.hard_intno=-1;
     }Eb=0;
     Gb=0;
     Re:do{
@@ -3255,7 +3258,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
            Fb=tlb_read[Db>>>12];
            if(((Fb|Db)&0xfff)>=(4096-15+1)){
                var Se;
-               if(Fb==-1)Za(Db,0,wa.cpl==3);
+               if(Fb==-1)Za(Db,0,self.cpl==3);
                Fb=tlb_read[Db>>>12];
                Gb=Eb=Db^Fb;
                b=phys_mem8[Eb++];
@@ -3334,7 +3337,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              ;
                              b&=7;
                              Oa=(b&4)<<1;
-                             xa[b&3]=(xa[b&3]&~(0xff<<Oa))|(((ga)&0xff)<<Oa);
+                             regs[b&3]=(regs[b&3]&~(0xff<<Oa))|(((ga)&0xff)<<Oa);
                              break jd;
                    case 0xb8:
                    case 0xb9:
@@ -3347,16 +3350,16 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  ga=phys_mem8[Eb]|(phys_mem8[Eb+1]<<8)|(phys_mem8[Eb+2]<<16)|(phys_mem8[Eb+3]<<24);
                                  Eb+=4;
                              };
-                             xa[b&7]=ga;
+                             regs[b&7]=ga;
                              break jd;
                    case 0x88:Ea=phys_mem8[Eb++];
                              ;
                              Ga=(Ea>>3)&7;
-                             ga=((xa[Ga&3]>>((Ga&4)<<1))&0xff);
+                             ga=((regs[Ga&3]>>((Ga&4)<<1))&0xff);
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
                                  Oa=(Fa&4)<<1;
-                                 xa[Fa&3]=(xa[Fa&3]&~(0xff<<Oa))|(((ga)&0xff)<<Oa);
+                                 regs[Fa&3]=(regs[Fa&3]&~(0xff<<Oa))|(((ga)&0xff)<<Oa);
                              }else{
                                  fa=Ib(Ea);
                                  {
@@ -3371,9 +3374,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              break jd;
                    case 0x89:Ea=phys_mem8[Eb++];
                              ;
-                             ga=xa[(Ea>>3)&7];
+                             ga=regs[(Ea>>3)&7];
                              if((Ea>>6)==3){
-                                 xa[Ea&7]=ga;
+                                 regs[Ea&7]=ga;
                              }else{
                                  fa=Ib(Ea);
                                  {
@@ -3390,40 +3393,40 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              ;
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
-                                 ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
+                                 ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                              }else{
                                  fa=Ib(Ea);
                                  ga=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                              }Ga=(Ea>>3)&7;
                              Oa=(Ga&4)<<1;
-                             xa[Ga&3]=(xa[Ga&3]&~(0xff<<Oa))|(((ga)&0xff)<<Oa);
+                             regs[Ga&3]=(regs[Ga&3]&~(0xff<<Oa))|(((ga)&0xff)<<Oa);
                              break jd;
                    case 0x8b:Ea=phys_mem8[Eb++];
                              ;
                              if((Ea>>6)==3){
-                                 ga=xa[Ea&7];
+                                 ga=regs[Ea&7];
                              }else{
                                  fa=Ib(Ea);
                                  ga=(((Oa=tlb_read[fa>>>12])|fa)&3?db():phys_mem32[(fa^Oa)>>2]);
-                             }xa[(Ea>>3)&7]=ga;
+                             }regs[(Ea>>3)&7]=ga;
                              break jd;
                    case 0xa0:fa=Mb();
                              ga=ab();
-                             xa[0]=(xa[0]&-256)|ga;
+                             regs[0]=(regs[0]&-256)|ga;
                              break jd;
                    case 0xa1:fa=Mb();
                              ga=eb();
-                             xa[0]=ga;
+                             regs[0]=ga;
                              break jd;
                    case 0xa2:fa=Mb();
-                             mb(xa[0]);
+                             mb(regs[0]);
                              break jd;
                    case 0xa3:fa=Mb();
-                             qb(xa[0]);
+                             qb(regs[0]);
                              break jd;
-                   case 0xd7:fa=(xa[3]+(xa[0]&0xff))&-1;
+                   case 0xd7:fa=(regs[3]+(regs[0]&0xff))&-1;
                              if(Da&0x000f){
-                                 fa=(fa+wa.segs[(Da&0x000f)-1].base)&-1;
+                                 fa=(fa+self.segs[(Da&0x000f)-1].base)&-1;
                              }ga=ab();
                              Nb(0,ga);
                              break jd;
@@ -3447,7 +3450,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      ga=phys_mem8[Eb]|(phys_mem8[Eb+1]<<8)|(phys_mem8[Eb+2]<<16)|(phys_mem8[Eb+3]<<24);
                                      Eb+=4;
                                  };
-                                 xa[Ea&7]=ga;
+                                 regs[Ea&7]=ga;
                              }else{
                                  fa=Ib(Ea);
                                  {
@@ -3464,21 +3467,21 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x95:
                    case 0x96:
                    case 0x97:Ga=b&7;
-                             ga=xa[0];
-                             xa[0]=xa[Ga];
-                             xa[Ga]=ga;
+                             ga=regs[0];
+                             regs[0]=regs[Ga];
+                             regs[Ga]=ga;
                              break jd;
                    case 0x86:Ea=phys_mem8[Eb++];
                              ;
                              Ga=(Ea>>3)&7;
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
-                                 ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
-                                 Nb(Fa,((xa[Ga&3]>>((Ga&4)<<1))&0xff));
+                                 ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
+                                 Nb(Fa,((regs[Ga&3]>>((Ga&4)<<1))&0xff));
                              }else{
                                  fa=Ib(Ea);
                                  ga=gb();
-                                 mb(((xa[Ga&3]>>((Ga&4)<<1))&0xff));
+                                 mb(((regs[Ga&3]>>((Ga&4)<<1))&0xff));
                              }Nb(Ga,ga);
                              break jd;
                    case 0x87:Ea=phys_mem8[Eb++];
@@ -3486,20 +3489,20 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              Ga=(Ea>>3)&7;
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
-                                 ga=xa[Fa];
-                                 xa[Fa]=xa[Ga];
+                                 ga=regs[Fa];
+                                 regs[Fa]=regs[Ga];
                              }else{
                                  fa=Ib(Ea);
                                  ga=kb();
-                                 qb(xa[Ga]);
-                             }xa[Ga]=ga;
+                                 qb(regs[Ga]);
+                             }regs[Ga]=ga;
                              break jd;
                    case 0x8e:Ea=phys_mem8[Eb++];
                              ;
                              Ga=(Ea>>3)&7;
                              if(Ga>=6||Ga==1)rc(6);
                              if((Ea>>6)==3){
-                                 ga=xa[Ea&7]&0xffff;
+                                 ga=regs[Ea&7]&0xffff;
                              }else{
                                  fa=Ib(Ea);
                                  ga=cb();
@@ -3509,9 +3512,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              ;
                              Ga=(Ea>>3)&7;
                              if(Ga>=6)rc(6);
-                             ga=wa.segs[Ga].selector;
+                             ga=self.segs[Ga].selector;
                              if((Ea>>6)==3){
-                                 xa[Ea&7]=ga;
+                                 regs[Ea&7]=ga;
                              }else{
                                  fa=Ib(Ea);
                                  ob(ga);
@@ -3526,7 +3529,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  fa+=4;
                                  Ha=cb();
                                  ge(0,Ha);
-                                 xa[(Ea>>3)&7]=ga;
+                                 regs[(Ea>>3)&7]=ga;
                              };
                              break jd;
                    case 0xc5:{
@@ -3538,7 +3541,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  fa+=4;
                                  Ha=cb();
                                  ge(3,Ha);
-                                 xa[(Ea>>3)&7]=ga;
+                                 regs[(Ea>>3)&7]=ga;
                              };
                              break jd;
                    case 0x00:
@@ -3552,10 +3555,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              ;
                              Ja=b>>3;
                              Ga=(Ea>>3)&7;
-                             Ha=((xa[Ga&3]>>((Ga&4)<<1))&0xff);
+                             Ha=((regs[Ga&3]>>((Ga&4)<<1))&0xff);
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
-                                 Nb(Fa,Pb(Ja,((xa[Fa&3]>>((Fa&4)<<1))&0xff),Ha));
+                                 Nb(Fa,Pb(Ja,((regs[Fa&3]>>((Fa&4)<<1))&0xff),Ha));
                              }else{
                                  fa=Ib(Ea);
                                  if(Ja!=7){
@@ -3577,10 +3580,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x31:Ea=phys_mem8[Eb++];
                              ;
                              Ja=b>>3;
-                             Ha=xa[(Ea>>3)&7];
+                             Ha=regs[(Ea>>3)&7];
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
-                                 xa[Fa]=Zb(Ja,xa[Fa],Ha);
+                                 regs[Fa]=Zb(Ja,regs[Fa],Ha);
                              }else{
                                  fa=Ib(Ea);
                                  ga=kb();
@@ -3591,12 +3594,12 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x39:Ea=phys_mem8[Eb++];
                              ;
                              Ja=b>>3;
-                             Ha=xa[(Ea>>3)&7];
+                             Ha=regs[(Ea>>3)&7];
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
                                  {
                                      ya=Ha;
-                                     za=(xa[Fa]-ya)&-1;
+                                     cc_dst=(regs[Fa]-ya)&-1;
                                      Aa=8;
                                  };
                              }else{
@@ -3604,7 +3607,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  ga=eb();
                                  {
                                      ya=Ha;
-                                     za=(ga-ya)&-1;
+                                     cc_dst=(ga-ya)&-1;
                                      Aa=8;
                                  };
                              }
@@ -3622,11 +3625,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              Ga=(Ea>>3)&7;
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
-                                 Ha=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
+                                 Ha=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                              }else{
                                  fa=Ib(Ea);
                                  Ha=ab();
-                             }Nb(Ga,Pb(Ja,((xa[Ga&3]>>((Ga&4)<<1))&0xff),Ha));
+                             }Nb(Ga,Pb(Ja,((regs[Ga&3]>>((Ga&4)<<1))&0xff),Ha));
                              break jd;
                    case 0x03:
                    case 0x0b:
@@ -3639,24 +3642,24 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              Ja=b>>3;
                              Ga=(Ea>>3)&7;
                              if((Ea>>6)==3){
-                                 Ha=xa[Ea&7];
+                                 Ha=regs[Ea&7];
                              }else{
                                  fa=Ib(Ea);
                                  Ha=eb();
-                             }xa[Ga]=Zb(Ja,xa[Ga],Ha);
+                             }regs[Ga]=Zb(Ja,regs[Ga],Ha);
                              break jd;
                    case 0x3b:Ea=phys_mem8[Eb++];
                              ;
                              Ja=b>>3;
                              Ga=(Ea>>3)&7;
                              if((Ea>>6)==3){
-                                 Ha=xa[Ea&7];
+                                 Ha=regs[Ea&7];
                              }else{
                                  fa=Ib(Ea);
                                  Ha=eb();
                              }{
                                  ya=Ha;
-                                 za=(xa[Ga]-ya)&-1;
+                                 cc_dst=(regs[Ga]-ya)&-1;
                                  Aa=8;
                              };
                              break jd;
@@ -3670,7 +3673,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x3c:Ha=phys_mem8[Eb++];
                              ;
                              Ja=b>>3;
-                             Nb(0,Pb(Ja,xa[0]&0xff,Ha));
+                             Nb(0,Pb(Ja,regs[0]&0xff,Ha));
                              break jd;
                    case 0x05:
                    case 0x0d:
@@ -3684,7 +3687,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  Eb+=4;
                              };
                              Ja=b>>3;
-                             xa[0]=Zb(Ja,xa[0],Ha);
+                             regs[0]=Zb(Ja,regs[0],Ha);
                              break jd;
                    case 0x80:Ea=phys_mem8[Eb++];
                              ;
@@ -3693,7 +3696,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  Fa=Ea&7;
                                  Ha=phys_mem8[Eb++];
                                  ;
-                                 Nb(Fa,Pb(Ja,((xa[Fa&3]>>((Fa&4)<<1))&0xff),Ha));
+                                 Nb(Fa,Pb(Ja,((regs[Fa&3]>>((Fa&4)<<1))&0xff),Ha));
                              }else{
                                  fa=Ib(Ea);
                                  Ha=phys_mem8[Eb++];
@@ -3717,7 +3720,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      Ha=phys_mem8[Eb]|(phys_mem8[Eb+1]<<8)|(phys_mem8[Eb+2]<<16)|(phys_mem8[Eb+3]<<24);
                                      Eb+=4;
                                  };
-                                 xa[Fa]=Zb(Ja,xa[Fa],Ha);
+                                 regs[Fa]=Zb(Ja,regs[Fa],Ha);
                              }else{
                                  fa=Ib(Ea);
                                  {
@@ -3741,7 +3744,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  Fa=Ea&7;
                                  Ha=((phys_mem8[Eb++]<<24)>>24);
                                  ;
-                                 xa[Fa]=Zb(Ja,xa[Fa],Ha);
+                                 regs[Fa]=Zb(Ja,regs[Fa],Ha);
                              }else{
                                  fa=Ib(Ea);
                                  Ha=((phys_mem8[Eb++]<<24)>>24);
@@ -3767,7 +3770,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              {
                                  if(Aa<25){
                                      Ba=Aa;
-                                 }xa[Ga]=Ca=(xa[Ga]+1)&-1;
+                                 }regs[Ga]=Ca=(regs[Ga]+1)&-1;
                                  Aa=27;
                              };
                              break jd;
@@ -3782,7 +3785,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              {
                                  if(Aa<25){
                                      Ba=Aa;
-                                 }xa[Ga]=Ca=(xa[Ga]-1)&-1;
+                                 }regs[Ga]=Ca=(regs[Ga]-1)&-1;
                                  Aa=30;
                              };
                              break jd;
@@ -3790,19 +3793,19 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              ;
                              Ga=(Ea>>3)&7;
                              if((Ea>>6)==3){
-                                 Ha=xa[Ea&7];
+                                 Ha=regs[Ea&7];
                              }else{
                                  fa=Ib(Ea);
                                  Ha=eb();
                              }Ia=((phys_mem8[Eb++]<<24)>>24);
                              ;
-                             xa[Ga]=Kc(Ha,Ia);
+                             regs[Ga]=Kc(Ha,Ia);
                              break jd;
                    case 0x69:Ea=phys_mem8[Eb++];
                              ;
                              Ga=(Ea>>3)&7;
                              if((Ea>>6)==3){
-                                 Ha=xa[Ea&7];
+                                 Ha=regs[Ea&7];
                              }else{
                                  fa=Ib(Ea);
                                  Ha=eb();
@@ -3810,42 +3813,42 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  Ia=phys_mem8[Eb]|(phys_mem8[Eb+1]<<8)|(phys_mem8[Eb+2]<<16)|(phys_mem8[Eb+3]<<24);
                                  Eb+=4;
                              };
-                             xa[Ga]=Kc(Ha,Ia);
+                             regs[Ga]=Kc(Ha,Ia);
                              break jd;
                    case 0x84:Ea=phys_mem8[Eb++];
                              ;
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
-                                 ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
+                                 ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                              }else{
                                  fa=Ib(Ea);
                                  ga=ab();
                              }Ga=(Ea>>3)&7;
-                             Ha=((xa[Ga&3]>>((Ga&4)<<1))&0xff);
-                             za=ga&Ha;
+                             Ha=((regs[Ga&3]>>((Ga&4)<<1))&0xff);
+                             cc_dst=ga&Ha;
                              Aa=12;
                              break jd;
                    case 0x85:Ea=phys_mem8[Eb++];
                              ;
                              if((Ea>>6)==3){
-                                 ga=xa[Ea&7];
+                                 ga=regs[Ea&7];
                              }else{
                                  fa=Ib(Ea);
                                  ga=eb();
-                             }Ha=xa[(Ea>>3)&7];
-                             za=ga&Ha;
+                             }Ha=regs[(Ea>>3)&7];
+                             cc_dst=ga&Ha;
                              Aa=14;
                              break jd;
                    case 0xa8:Ha=phys_mem8[Eb++];
                              ;
-                             za=xa[0]&Ha;
+                             cc_dst=regs[0]&Ha;
                              Aa=12;
                              break jd;
                    case 0xa9:{
                                  Ha=phys_mem8[Eb]|(phys_mem8[Eb+1]<<8)|(phys_mem8[Eb+2]<<16)|(phys_mem8[Eb+3]<<24);
                                  Eb+=4;
                              };
-                             za=xa[0]&Ha;
+                             cc_dst=regs[0]&Ha;
                              Aa=14;
                              break jd;
                    case 0xf6:Ea=phys_mem8[Eb++];
@@ -3854,18 +3857,18 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              switch(Ja){
                                  case 0:if((Ea>>6)==3){
                                             Fa=Ea&7;
-                                            ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
+                                            ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                                         }else{
                                             fa=Ib(Ea);
                                             ga=ab();
                                         }Ha=phys_mem8[Eb++];
                                         ;
-                                        za=ga&Ha;
+                                        cc_dst=ga&Ha;
                                         Aa=12;
                                         break;
                                  case 2:if((Ea>>6)==3){
                                             Fa=Ea&7;
-                                            Nb(Fa,~((xa[Fa&3]>>((Fa&4)<<1))&0xff));
+                                            Nb(Fa,~((regs[Fa&3]>>((Fa&4)<<1))&0xff));
                                         }else{
                                             fa=Ib(Ea);
                                             ga=gb();
@@ -3875,7 +3878,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                         break;
                                  case 3:if((Ea>>6)==3){
                                             Fa=Ea&7;
-                                            Nb(Fa,Pb(5,0,((xa[Fa&3]>>((Fa&4)<<1))&0xff)));
+                                            Nb(Fa,Pb(5,0,((regs[Fa&3]>>((Fa&4)<<1))&0xff)));
                                         }else{
                                             fa=Ib(Ea);
                                             ga=gb();
@@ -3885,23 +3888,23 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                         break;
                                  case 4:if((Ea>>6)==3){
                                             Fa=Ea&7;
-                                            ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
+                                            ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                                         }else{
                                             fa=Ib(Ea);
                                             ga=ab();
-                                        }Ob(0,Cc(xa[0],ga));
+                                        }Ob(0,Cc(regs[0],ga));
                                         break;
                                  case 5:if((Ea>>6)==3){
                                             Fa=Ea&7;
-                                            ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
+                                            ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                                         }else{
                                             fa=Ib(Ea);
                                             ga=ab();
-                                        }Ob(0,Dc(xa[0],ga));
+                                        }Ob(0,Dc(regs[0],ga));
                                         break;
                                  case 6:if((Ea>>6)==3){
                                             Fa=Ea&7;
-                                            ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
+                                            ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                                         }else{
                                             fa=Ib(Ea);
                                             ga=ab();
@@ -3909,7 +3912,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                         break;
                                  case 7:if((Ea>>6)==3){
                                             Fa=Ea&7;
-                                            ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
+                                            ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                                         }else{
                                             fa=Ib(Ea);
                                             ga=ab();
@@ -3923,7 +3926,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              Ja=(Ea>>3)&7;
                              switch(Ja){
                                  case 0:if((Ea>>6)==3){
-                                            ga=xa[Ea&7];
+                                            ga=regs[Ea&7];
                                         }else{
                                             fa=Ib(Ea);
                                             ga=eb();
@@ -3931,12 +3934,12 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                             Ha=phys_mem8[Eb]|(phys_mem8[Eb+1]<<8)|(phys_mem8[Eb+2]<<16)|(phys_mem8[Eb+3]<<24);
                                             Eb+=4;
                                         };
-                                        za=ga&Ha;
+                                        cc_dst=ga&Ha;
                                         Aa=14;
                                         break;
                                  case 2:if((Ea>>6)==3){
                                             Fa=Ea&7;
-                                            xa[Fa]=~xa[Fa];
+                                            regs[Fa]=~regs[Fa];
                                         }else{
                                             fa=Ib(Ea);
                                             ga=kb();
@@ -3946,7 +3949,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                         break;
                                  case 3:if((Ea>>6)==3){
                                             Fa=Ea&7;
-                                            xa[Fa]=Zb(5,0,xa[Fa]);
+                                            regs[Fa]=Zb(5,0,regs[Fa]);
                                         }else{
                                             fa=Ib(Ea);
                                             ga=kb();
@@ -3955,36 +3958,36 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                         }
                                         break;
                                  case 4:if((Ea>>6)==3){
-                                            ga=xa[Ea&7];
+                                            ga=regs[Ea&7];
                                         }else{
                                             fa=Ib(Ea);
                                             ga=eb();
-                                        }xa[0]=Jc(xa[0],ga);
-                                        xa[2]=Ma;
+                                        }regs[0]=Jc(regs[0],ga);
+                                        regs[2]=Ma;
                                         break;
                                  case 5:if((Ea>>6)==3){
-                                            ga=xa[Ea&7];
+                                            ga=regs[Ea&7];
                                         }else{
                                             fa=Ib(Ea);
                                             ga=eb();
-                                        }xa[0]=Kc(xa[0],ga);
-                                        xa[2]=Ma;
+                                        }regs[0]=Kc(regs[0],ga);
+                                        regs[2]=Ma;
                                         break;
                                  case 6:if((Ea>>6)==3){
-                                            ga=xa[Ea&7];
+                                            ga=regs[Ea&7];
                                         }else{
                                             fa=Ib(Ea);
                                             ga=eb();
-                                        }xa[0]=vc(xa[2],xa[0],ga);
-                                        xa[2]=Ma;
+                                        }regs[0]=vc(regs[2],regs[0],ga);
+                                        regs[2]=Ma;
                                         break;
                                  case 7:if((Ea>>6)==3){
-                                            ga=xa[Ea&7];
+                                            ga=regs[Ea&7];
                                         }else{
                                             fa=Ib(Ea);
                                             ga=eb();
-                                        }xa[0]=zc(xa[2],xa[0],ga);
-                                        xa[2]=Ma;
+                                        }regs[0]=zc(regs[2],regs[0],ga);
+                                        regs[2]=Ma;
                                         break;
                                  default:rc(6);
                              }
@@ -3996,7 +3999,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  Ha=phys_mem8[Eb++];
                                  ;
                                  Fa=Ea&7;
-                                 Nb(Fa,cc(Ja,((xa[Fa&3]>>((Fa&4)<<1))&0xff),Ha));
+                                 Nb(Fa,cc(Ja,((regs[Fa&3]>>((Fa&4)<<1))&0xff),Ha));
                              }else{
                                  fa=Ib(Ea);
                                  Ha=phys_mem8[Eb++];
@@ -4013,7 +4016,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  Ha=phys_mem8[Eb++];
                                  ;
                                  Fa=Ea&7;
-                                 xa[Fa]=gc(Ja,xa[Fa],Ha);
+                                 regs[Fa]=gc(Ja,regs[Fa],Ha);
                              }else{
                                  fa=Ib(Ea);
                                  Ha=phys_mem8[Eb++];
@@ -4028,7 +4031,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              Ja=(Ea>>3)&7;
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
-                                 Nb(Fa,cc(Ja,((xa[Fa&3]>>((Fa&4)<<1))&0xff),1));
+                                 Nb(Fa,cc(Ja,((regs[Fa&3]>>((Fa&4)<<1))&0xff),1));
                              }else{
                                  fa=Ib(Ea);
                                  ga=gb();
@@ -4041,7 +4044,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              Ja=(Ea>>3)&7;
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
-                                 xa[Fa]=gc(Ja,xa[Fa],1);
+                                 regs[Fa]=gc(Ja,regs[Fa],1);
                              }else{
                                  fa=Ib(Ea);
                                  ga=kb();
@@ -4052,10 +4055,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xd2:Ea=phys_mem8[Eb++];
                              ;
                              Ja=(Ea>>3)&7;
-                             Ha=xa[1]&0xff;
+                             Ha=regs[1]&0xff;
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
-                                 Nb(Fa,cc(Ja,((xa[Fa&3]>>((Fa&4)<<1))&0xff),Ha));
+                                 Nb(Fa,cc(Ja,((regs[Fa&3]>>((Fa&4)<<1))&0xff),Ha));
                              }else{
                                  fa=Ib(Ea);
                                  ga=gb();
@@ -4066,10 +4069,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xd3:Ea=phys_mem8[Eb++];
                              ;
                              Ja=(Ea>>3)&7;
-                             Ha=xa[1]&0xff;
+                             Ha=regs[1]&0xff;
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
-                                 xa[Fa]=gc(Ja,xa[Fa],Ha);
+                                 regs[Fa]=gc(Ja,regs[Fa],Ha);
                              }else{
                                  fa=Ib(Ea);
                                  ga=kb();
@@ -4077,9 +4080,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  qb(ga);
                              }
                              break jd;
-                   case 0x98:xa[0]=(xa[0]<<16)>>16;
+                   case 0x98:regs[0]=(regs[0]<<16)>>16;
                              break jd;
-                   case 0x99:xa[2]=xa[0]>>31;
+                   case 0x99:regs[2]=regs[0]>>31;
                              break jd;
                    case 0x50:
                    case 0x51:
@@ -4088,8 +4091,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x54:
                    case 0x55:
                    case 0x56:
-                   case 0x57:ga=xa[b&7];
-                             fa=(xa[4]-4)&-1;
+                   case 0x57:ga=regs[b&7];
+                             fa=(regs[4]-4)&-1;
                              {
                                  Oa=tlb_write[fa>>>12];
                                  if((Oa|fa)&3){
@@ -4098,7 +4101,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      phys_mem32[(fa^Oa)>>2]=ga;
                                  }
                              };
-                             xa[4]=fa;
+                             regs[4]=fa;
                              break jd;
                    case 0x58:
                    case 0x59:
@@ -4107,17 +4110,17 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x5c:
                    case 0x5d:
                    case 0x5e:
-                   case 0x5f:fa=xa[4];
+                   case 0x5f:fa=regs[4];
                              ga=(((Oa=tlb_read[fa>>>12])|fa)&3?db():phys_mem32[(fa^Oa)>>2]);
-                             xa[4]=(fa+4)&-1;
-                             xa[b&7]=ga;
+                             regs[4]=(fa+4)&-1;
+                             regs[b&7]=ga;
                              break jd;
-                   case 0x60:fa=(xa[4]-32)&-1;
+                   case 0x60:fa=(regs[4]-32)&-1;
                              Ha=fa;
                              for(Ga=7;
                                      Ga>=0;
                                      Ga--){
-                                 ga=xa[Ga];
+                                 ga=regs[Ga];
                                  {
                                      Oa=tlb_write[fa>>>12];
                                      if((Oa|fa)&3){
@@ -4127,71 +4130,71 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      }
                                  };
                                  fa=(fa+4)&-1;
-                             }xa[4]=Ha;
+                             }regs[4]=Ha;
                              break jd;
-                   case 0x61:fa=xa[4];
+                   case 0x61:fa=regs[4];
                              for(Ga=7;
                                      Ga>=0;
                                      Ga--){
                                  if(Ga!=4){
-                                     xa[Ga]=(((Oa=tlb_read[fa>>>12])|fa)&3?db():phys_mem32[(fa^Oa)>>2]);
+                                     regs[Ga]=(((Oa=tlb_read[fa>>>12])|fa)&3?db():phys_mem32[(fa^Oa)>>2]);
                                  }fa=(fa+4)&-1;
-                             }xa[4]=fa;
+                             }regs[4]=fa;
                              break jd;
                    case 0x8f:Ea=phys_mem8[Eb++];
                              ;
                              if((Ea>>6)==3){
-                                 fa=xa[4];
+                                 fa=regs[4];
                                  ga=eb();
-                                 xa[4]=(fa+4)&-1;
-                                 xa[Ea&7]=ga;
+                                 regs[4]=(fa+4)&-1;
+                                 regs[Ea&7]=ga;
                              }else{
-                                 fa=xa[4];
+                                 fa=regs[4];
                                  ga=eb();
                                  fa=Ib(Ea,4);
                                  qb(ga);
-                                 xa[4]=(xa[4]+4)&-1;
+                                 regs[4]=(regs[4]+4)&-1;
                              }
                              break jd;
                    case 0x68:{
                                  ga=phys_mem8[Eb]|(phys_mem8[Eb+1]<<8)|(phys_mem8[Eb+2]<<16)|(phys_mem8[Eb+3]<<24);
                                  Eb+=4;
                              };
-                             fa=(xa[4]-4)&-1;
+                             fa=(regs[4]-4)&-1;
                              qb(ga);
-                             xa[4]=fa;
+                             regs[4]=fa;
                              break jd;
                    case 0x6a:ga=((phys_mem8[Eb++]<<24)>>24);
                              ;
-                             fa=(xa[4]-4)&-1;
+                             fa=(regs[4]-4)&-1;
                              qb(ga);
-                             xa[4]=fa;
+                             regs[4]=fa;
                              break jd;
-                   case 0xc9:fa=xa[5];
+                   case 0xc9:fa=regs[5];
                              ga=eb();
-                             xa[5]=ga;
-                             xa[4]=(fa+4)&-1;
+                             regs[5]=ga;
+                             regs[4]=(fa+4)&-1;
                              break jd;
                    case 0x9c:ga=Pc();
-                             fa=(xa[4]-4)&-1;
+                             fa=(regs[4]-4)&-1;
                              qb(ga);
-                             xa[4]=fa;
+                             regs[4]=fa;
                              break jd;
-                   case 0x9d:fa=xa[4];
+                   case 0x9d:fa=regs[4];
                              ga=eb();
-                             xa[4]=(fa+4)&-1;
-                             if(wa.cpl==0){
+                             regs[4]=(fa+4)&-1;
+                             if(self.cpl==0){
                                  Rc(ga,(0x00000100|0x00040000|0x00200000|0x00004000|0x00000200|0x00003000));
                                  {
-                                     if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                     if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                                  };
                              }else{
                                  var ye;
-                                 ye=(wa.eflags>>12)&3;
-                                 if(wa.cpl<=ye){
+                                 ye=(self.eflags>>12)&3;
+                                 if(self.cpl<=ye){
                                      Rc(ga,(0x00000100|0x00040000|0x00200000|0x00004000|0x00000200));
                                      {
-                                         if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                         if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                                      };
                                  }else{
                                      Rc(ga,(0x00000100|0x00040000|0x00200000|0x00004000));
@@ -4199,59 +4202,59 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              }
                              break jd;
                    case 0x06:{
-                                 ga=wa.segs[0].selector;
-                                 fa=(xa[4]-4)&-1;
+                                 ga=self.segs[0].selector;
+                                 fa=(regs[4]-4)&-1;
                                  qb(ga);
-                                 xa[4]=fa;
+                                 regs[4]=fa;
                              };
                              break jd;
                    case 0x0e:{
-                                 ga=wa.segs[1].selector;
-                                 fa=(xa[4]-4)&-1;
+                                 ga=self.segs[1].selector;
+                                 fa=(regs[4]-4)&-1;
                                  qb(ga);
-                                 xa[4]=fa;
+                                 regs[4]=fa;
                              };
                              break jd;
                    case 0x16:{
-                                 ga=wa.segs[2].selector;
-                                 fa=(xa[4]-4)&-1;
+                                 ga=self.segs[2].selector;
+                                 fa=(regs[4]-4)&-1;
                                  qb(ga);
-                                 xa[4]=fa;
+                                 regs[4]=fa;
                              };
                              break jd;
                    case 0x1e:{
-                                 ga=wa.segs[3].selector;
-                                 fa=(xa[4]-4)&-1;
+                                 ga=self.segs[3].selector;
+                                 fa=(regs[4]-4)&-1;
                                  qb(ga);
-                                 xa[4]=fa;
+                                 regs[4]=fa;
                              };
                              break jd;
                    case 0x07:{
-                                 fa=xa[4];
+                                 fa=regs[4];
                                  ga=eb();
                                  ge(0,ga&0xffff);
-                                 xa[4]=(xa[4]+4)&-1;
+                                 regs[4]=(regs[4]+4)&-1;
                              };
                              break jd;
                    case 0x17:{
-                                 fa=xa[4];
+                                 fa=regs[4];
                                  ga=eb();
                                  ge(2,ga&0xffff);
-                                 xa[4]=(xa[4]+4)&-1;
+                                 regs[4]=(regs[4]+4)&-1;
                              };
                              break jd;
                    case 0x1f:{
-                                 fa=xa[4];
+                                 fa=regs[4];
                                  ga=eb();
                                  ge(3,ga&0xffff);
-                                 xa[4]=(xa[4]+4)&-1;
+                                 regs[4]=(regs[4]+4)&-1;
                              };
                              break jd;
                    case 0x8d:Ea=phys_mem8[Eb++];
                              ;
                              if((Ea>>6)==3)rc(6);
                              Da&=~0x000f;
-                             xa[(Ea>>3)&7]=Ib(Ea);
+                             regs[(Ea>>3)&7]=Ib(Ea);
                              break jd;
                    case 0xfe:Ea=phys_mem8[Eb++];
                              ;
@@ -4259,7 +4262,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              switch(Ja){
                                  case 0:if((Ea>>6)==3){
                                             Fa=Ea&7;
-                                            Nb(Fa,Ub(((xa[Fa&3]>>((Fa&4)<<1))&0xff)));
+                                            Nb(Fa,Ub(((regs[Fa&3]>>((Fa&4)<<1))&0xff)));
                                         }else{
                                             fa=Ib(Ea);
                                             ga=gb();
@@ -4269,7 +4272,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                         break;
                                  case 1:if((Ea>>6)==3){
                                             Fa=Ea&7;
-                                            Nb(Fa,Vb(((xa[Fa&3]>>((Fa&4)<<1))&0xff)));
+                                            Nb(Fa,Vb(((regs[Fa&3]>>((Fa&4)<<1))&0xff)));
                                         }else{
                                             fa=Ib(Ea);
                                             ga=gb();
@@ -4289,7 +4292,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                             {
                                                 if(Aa<25){
                                                     Ba=Aa;
-                                                }xa[Fa]=Ca=(xa[Fa]+1)&-1;
+                                                }regs[Fa]=Ca=(regs[Fa]+1)&-1;
                                                 Aa=27;
                                             };
                                         }else{
@@ -4309,7 +4312,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                             {
                                                 if(Aa<25){
                                                     Ba=Aa;
-                                                }xa[Fa]=Ca=(xa[Fa]-1)&-1;
+                                                }regs[Fa]=Ca=(regs[Fa]-1)&-1;
                                                 Aa=30;
                                             };
                                         }else{
@@ -4325,30 +4328,30 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                         }
                                         break;
                                  case 2:if((Ea>>6)==3){
-                                            ga=xa[Ea&7];
+                                            ga=regs[Ea&7];
                                         }else{
                                             fa=Ib(Ea);
                                             ga=eb();
-                                        }fa=(xa[4]-4)&-1;
+                                        }fa=(regs[4]-4)&-1;
                                         qb((Db+Eb-Gb));
-                                        xa[4]=fa;
+                                        regs[4]=fa;
                                         Db=ga,Eb=Gb=0;
                                         break;
                                  case 4:if((Ea>>6)==3){
-                                            ga=xa[Ea&7];
+                                            ga=regs[Ea&7];
                                         }else{
                                             fa=Ib(Ea);
                                             ga=eb();
                                         }Db=ga,Eb=Gb=0;
                                         break;
                                  case 6:if((Ea>>6)==3){
-                                            ga=xa[Ea&7];
+                                            ga=regs[Ea&7];
                                         }else{
                                             fa=Ib(Ea);
                                             ga=eb();
-                                        }fa=(xa[4]-4)&-1;
+                                        }fa=(regs[4]-4)&-1;
                                         qb(ga);
-                                        xa[4]=fa;
+                                        regs[4]=fa;
                                         break;
                                  case 3:
                                  case 5:default:throw"GRP5";
@@ -4400,7 +4403,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 12:
                                  case 15:
                                  case 18:
-                                 case 21:Ha=(za&0xff)==0;
+                                 case 21:Ha=(cc_dst&0xff)==0;
                                          break;
                                  case 1:
                                  case 4:
@@ -4409,7 +4412,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 13:
                                  case 16:
                                  case 19:
-                                 case 22:Ha=(za&0xffff)==0;
+                                 case 22:Ha=(cc_dst&0xffff)==0;
                                          break;
                                  case 2:
                                  case 5:
@@ -4418,7 +4421,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 14:
                                  case 17:
                                  case 20:
-                                 case 23:Ha=za==0;
+                                 case 23:Ha=cc_dst==0;
                                          break;
                                  case 24:Ha=(ya>>6)&1;
                                          break;
@@ -4449,7 +4452,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 12:
                                  case 15:
                                  case 18:
-                                 case 21:Ha=(za&0xff)==0;
+                                 case 21:Ha=(cc_dst&0xff)==0;
                                          break;
                                  case 1:
                                  case 4:
@@ -4458,7 +4461,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 13:
                                  case 16:
                                  case 19:
-                                 case 22:Ha=(za&0xffff)==0;
+                                 case 22:Ha=(cc_dst&0xffff)==0;
                                          break;
                                  case 2:
                                  case 5:
@@ -4467,7 +4470,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 14:
                                  case 17:
                                  case 20:
-                                 case 23:Ha=za==0;
+                                 case 23:Ha=cc_dst==0;
                                          break;
                                  case 24:Ha=(ya>>6)&1;
                                          break;
@@ -4492,31 +4495,31 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              break jd;
                    case 0xe2:ga=((phys_mem8[Eb++]<<24)>>24);
                              ;
-                             xa[1]=(xa[1]-1)&-1;
-                             if(xa[1])Eb=(Eb+ga)>>0;
+                             regs[1]=(regs[1]-1)&-1;
+                             if(regs[1])Eb=(Eb+ga)>>0;
                              break jd;
                    case 0xe3:ga=((phys_mem8[Eb++]<<24)>>24);
                              ;
-                             if(xa[1]==0)Eb=(Eb+ga)>>0;
+                             if(regs[1]==0)Eb=(Eb+ga)>>0;
                              break jd;
                    case 0xc2:Ha=(Hb()<<16)>>16;
-                             fa=xa[4];
+                             fa=regs[4];
                              ga=eb();
-                             xa[4]=(xa[4]+4+Ha)&-1;
+                             regs[4]=(regs[4]+4+Ha)&-1;
                              Db=ga,Eb=Gb=0;
                              break jd;
-                   case 0xc3:fa=xa[4];
+                   case 0xc3:fa=regs[4];
                              ga=eb();
-                             xa[4]=(xa[4]+4)&-1;
+                             regs[4]=(regs[4]+4)&-1;
                              Db=ga,Eb=Gb=0;
                              break jd;
                    case 0xe8:{
                                  ga=phys_mem8[Eb]|(phys_mem8[Eb+1]<<8)|(phys_mem8[Eb+2]<<16)|(phys_mem8[Eb+3]<<24);
                                  Eb+=4;
                              };
-                             fa=(xa[4]-4)&-1;
+                             fa=(regs[4]-4)&-1;
                              qb((Db+Eb-Gb));
-                             xa[4]=fa;
+                             regs[4]=fa;
                              Eb=(Eb+ga)>>0;
                              break jd;
                    case 0x90:break jd;
@@ -4537,7 +4540,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              break jd;
                    case 0xcf:Be(1);
                              {
-                                 if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                 if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
                    case 0xf5:ya=ec()^0x0001;
@@ -4549,118 +4552,118 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xf9:ya=ec()|0x0001;
                              Aa=24;
                              break jd;
-                   case 0xfc:wa.df=1;
+                   case 0xfc:self.df=1;
                              break jd;
-                   case 0xfd:wa.df=-1;
+                   case 0xfd:self.df=-1;
                              break jd;
-                   case 0xfa:ye=(wa.eflags>>12)&3;
-                             if(wa.cpl>ye)rc(13);
-                             wa.eflags&=~0x00000200;
+                   case 0xfa:ye=(self.eflags>>12)&3;
+                             if(self.cpl>ye)rc(13);
+                             self.eflags&=~0x00000200;
                              break jd;
-                   case 0xfb:ye=(wa.eflags>>12)&3;
-                             if(wa.cpl>ye)rc(13);
-                             wa.eflags|=0x00000200;
+                   case 0xfb:ye=(self.eflags>>12)&3;
+                             if(self.cpl>ye)rc(13);
+                             self.eflags|=0x00000200;
                              {
-                                 if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                 if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
-                   case 0x9e:ga=((xa[0]>>8)&(0x0080|0x0040|0x0010|0x0004|0x0001))|(Tb(0)<<11);
+                   case 0x9e:ga=((regs[0]>>8)&(0x0080|0x0040|0x0010|0x0004|0x0001))|(Tb(0)<<11);
                              ya=ga;
                              Aa=24;
                              break jd;
                    case 0x9f:ga=Pc();
                              Nb(4,ga);
                              break jd;
-                   case 0xf4:if(wa.cpl!=0)rc(13);
-                                 wa.halted=1;
+                   case 0xf4:if(self.cpl!=0)rc(13);
+                                 self.halted=1;
                              La=257;
                              break Re;
                    case 0xa4:if(Da&(0x0010|0x0020)){
-                                 if(xa[1]){
-                                     if(8===32&&(xa[1]>>>0)>=4&&wa.df==1&&((xa[6]|xa[7])&3)==0&&bd()){
+                                 if(regs[1]){
+                                     if(8===32&&(regs[1]>>>0)>=4&&self.df==1&&((regs[6]|regs[7])&3)==0&&bd()){
                                      }else{
-                                         fa=xa[6];
+                                         fa=regs[6];
                                          ga=ab();
-                                         fa=xa[7];
+                                         fa=regs[7];
                                          mb(ga);
-                                         xa[6]=(xa[6]+(wa.df<<0))&-1;
-                                         xa[7]=(xa[7]+(wa.df<<0))&-1;
-                                         xa[1]=(xa[1]-1)&-1;
+                                         regs[6]=(regs[6]+(self.df<<0))&-1;
+                                         regs[7]=(regs[7]+(self.df<<0))&-1;
+                                         regs[1]=(regs[1]-1)&-1;
                                      }Eb=Gb;
                                  }
                              }else{
-                                 fa=xa[6];
+                                 fa=regs[6];
                                  ga=ab();
-                                 fa=xa[7];
+                                 fa=regs[7];
                                  mb(ga);
-                                 xa[6]=(xa[6]+(wa.df<<0))&-1;
-                                 xa[7]=(xa[7]+(wa.df<<0))&-1;
+                                 regs[6]=(regs[6]+(self.df<<0))&-1;
+                                 regs[7]=(regs[7]+(self.df<<0))&-1;
                              };
                              break jd;
                    case 0xa5:if(Da&(0x0010|0x0020)){
-                                 if(xa[1]){
-                                     if(32===32&&(xa[1]>>>0)>=4&&wa.df==1&&((xa[6]|xa[7])&3)==0&&bd()){
+                                 if(regs[1]){
+                                     if(32===32&&(regs[1]>>>0)>=4&&self.df==1&&((regs[6]|regs[7])&3)==0&&bd()){
                                      }else{
-                                         fa=xa[6];
+                                         fa=regs[6];
                                          ga=eb();
-                                         fa=xa[7];
+                                         fa=regs[7];
                                          qb(ga);
-                                         xa[6]=(xa[6]+(wa.df<<2))&-1;
-                                         xa[7]=(xa[7]+(wa.df<<2))&-1;
-                                         xa[1]=(xa[1]-1)&-1;
+                                         regs[6]=(regs[6]+(self.df<<2))&-1;
+                                         regs[7]=(regs[7]+(self.df<<2))&-1;
+                                         regs[1]=(regs[1]-1)&-1;
                                      }Eb=Gb;
                                  }
                              }else{
-                                 fa=xa[6];
+                                 fa=regs[6];
                                  ga=eb();
-                                 fa=xa[7];
+                                 fa=regs[7];
                                  qb(ga);
-                                 xa[6]=(xa[6]+(wa.df<<2))&-1;
-                                 xa[7]=(xa[7]+(wa.df<<2))&-1;
+                                 regs[6]=(regs[6]+(self.df<<2))&-1;
+                                 regs[7]=(regs[7]+(self.df<<2))&-1;
                              };
                              break jd;
                    case 0xaa:if(Da&(0x0010|0x0020)){
-                                 if(xa[1]){
-                                     if(8===32&&(xa[1]>>>0)>=4&&wa.df==1&&(xa[7]&3)==0&&gd()){
+                                 if(regs[1]){
+                                     if(8===32&&(regs[1]>>>0)>=4&&self.df==1&&(regs[7]&3)==0&&gd()){
                                      }else{
-                                         fa=xa[7];
-                                         mb(xa[0]);
-                                         xa[7]=(fa+(wa.df<<0))&-1;
-                                         xa[1]=(xa[1]-1)&-1;
+                                         fa=regs[7];
+                                         mb(regs[0]);
+                                         regs[7]=(fa+(self.df<<0))&-1;
+                                         regs[1]=(regs[1]-1)&-1;
                                      }Eb=Gb;
                                  }
                              }else{
-                                 fa=xa[7];
-                                 mb(xa[0]);
-                                 xa[7]=(fa+(wa.df<<0))&-1;
+                                 fa=regs[7];
+                                 mb(regs[0]);
+                                 regs[7]=(fa+(self.df<<0))&-1;
                              };
                              break jd;
                    case 0xab:if(Da&(0x0010|0x0020)){
-                                 if(xa[1]){
-                                     if(32===32&&(xa[1]>>>0)>=4&&wa.df==1&&(xa[7]&3)==0&&gd()){
+                                 if(regs[1]){
+                                     if(32===32&&(regs[1]>>>0)>=4&&self.df==1&&(regs[7]&3)==0&&gd()){
                                      }else{
-                                         fa=xa[7];
-                                         qb(xa[0]);
-                                         xa[7]=(fa+(wa.df<<2))&-1;
-                                         xa[1]=(xa[1]-1)&-1;
+                                         fa=regs[7];
+                                         qb(regs[0]);
+                                         regs[7]=(fa+(self.df<<2))&-1;
+                                         regs[1]=(regs[1]-1)&-1;
                                      }Eb=Gb;
                                  }
                              }else{
-                                 fa=xa[7];
-                                 qb(xa[0]);
-                                 xa[7]=(fa+(wa.df<<2))&-1;
+                                 fa=regs[7];
+                                 qb(regs[0]);
+                                 regs[7]=(fa+(self.df<<2))&-1;
                              };
                              break jd;
                    case 0xa6:if(Da&(0x0010|0x0020)){
-                                 if(xa[1]){
-                                     fa=xa[6];
+                                 if(regs[1]){
+                                     fa=regs[6];
                                      ga=ab();
-                                     fa=xa[7];
+                                     fa=regs[7];
                                      Ha=ab();
                                      Pb(7,ga,Ha);
-                                     xa[6]=(xa[6]+(wa.df<<0))&-1;
-                                     xa[7]=(xa[7]+(wa.df<<0))&-1;
-                                     xa[1]=(xa[1]-1)&-1;
+                                     regs[6]=(regs[6]+(self.df<<0))&-1;
+                                     regs[7]=(regs[7]+(self.df<<0))&-1;
+                                     regs[1]=(regs[1]-1)&-1;
                                      if(Da&0x0010){
                                          if(!Tb(4))break jd;
                                      }else{
@@ -4668,25 +4671,25 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      }Eb=Gb;
                                  }
                              }else{
-                                 fa=xa[6];
+                                 fa=regs[6];
                                  ga=ab();
-                                 fa=xa[7];
+                                 fa=regs[7];
                                  Ha=ab();
                                  Pb(7,ga,Ha);
-                                 xa[6]=(xa[6]+(wa.df<<0))&-1;
-                                 xa[7]=(xa[7]+(wa.df<<0))&-1;
+                                 regs[6]=(regs[6]+(self.df<<0))&-1;
+                                 regs[7]=(regs[7]+(self.df<<0))&-1;
                              };
                              break jd;
                    case 0xa7:if(Da&(0x0010|0x0020)){
-                                 if(xa[1]){
-                                     fa=xa[6];
+                                 if(regs[1]){
+                                     fa=regs[6];
                                      ga=eb();
-                                     fa=xa[7];
+                                     fa=regs[7];
                                      Ha=eb();
                                      Zb(7,ga,Ha);
-                                     xa[6]=(xa[6]+(wa.df<<2))&-1;
-                                     xa[7]=(xa[7]+(wa.df<<2))&-1;
-                                     xa[1]=(xa[1]-1)&-1;
+                                     regs[6]=(regs[6]+(self.df<<2))&-1;
+                                     regs[7]=(regs[7]+(self.df<<2))&-1;
+                                     regs[1]=(regs[1]-1)&-1;
                                      if(Da&0x0010){
                                          if(!Tb(4))break jd;
                                      }else{
@@ -4694,54 +4697,54 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      }Eb=Gb;
                                  }
                              }else{
-                                 fa=xa[6];
+                                 fa=regs[6];
                                  ga=eb();
-                                 fa=xa[7];
+                                 fa=regs[7];
                                  Ha=eb();
                                  Zb(7,ga,Ha);
-                                 xa[6]=(xa[6]+(wa.df<<2))&-1;
-                                 xa[7]=(xa[7]+(wa.df<<2))&-1;
+                                 regs[6]=(regs[6]+(self.df<<2))&-1;
+                                 regs[7]=(regs[7]+(self.df<<2))&-1;
                              };
                              break jd;
                    case 0xac:if(Da&(0x0010|0x0020)){
-                                 if(xa[1]){
-                                     fa=xa[6];
-                                     if(8==32)xa[0]=eb();
+                                 if(regs[1]){
+                                     fa=regs[6];
+                                     if(8==32)regs[0]=eb();
                                      else Nb(0,ab());
-                                     xa[6]=(fa+(wa.df<<0))&-1;
-                                     xa[1]=(xa[1]-1)&-1;
+                                     regs[6]=(fa+(self.df<<0))&-1;
+                                     regs[1]=(regs[1]-1)&-1;
                                      Eb=Gb;
                                  }
                              }else{
-                                 fa=xa[6];
-                                 if(8==32)xa[0]=eb();
+                                 fa=regs[6];
+                                 if(8==32)regs[0]=eb();
                                  else Nb(0,ab());
-                                 xa[6]=(fa+(wa.df<<0))&-1;
+                                 regs[6]=(fa+(self.df<<0))&-1;
                              };
                              break jd;
                    case 0xad:if(Da&(0x0010|0x0020)){
-                                 if(xa[1]){
-                                     fa=xa[6];
-                                     if(32==32)xa[0]=eb();
+                                 if(regs[1]){
+                                     fa=regs[6];
+                                     if(32==32)regs[0]=eb();
                                      else Te(0,eb());
-                                     xa[6]=(fa+(wa.df<<2))&-1;
-                                     xa[1]=(xa[1]-1)&-1;
+                                     regs[6]=(fa+(self.df<<2))&-1;
+                                     regs[1]=(regs[1]-1)&-1;
                                      Eb=Gb;
                                  }
                              }else{
-                                 fa=xa[6];
-                                 if(32==32)xa[0]=eb();
+                                 fa=regs[6];
+                                 if(32==32)regs[0]=eb();
                                  else Te(0,eb());
-                                 xa[6]=(fa+(wa.df<<2))&-1;
+                                 regs[6]=(fa+(self.df<<2))&-1;
                              };
                              break jd;
                    case 0xae:if(Da&(0x0010|0x0020)){
-                                 if(xa[1]){
-                                     fa=xa[7];
+                                 if(regs[1]){
+                                     fa=regs[7];
                                      ga=ab();
-                                     Pb(7,xa[0],ga);
-                                     xa[7]=(xa[7]+(wa.df<<0))&-1;
-                                     xa[1]=(xa[1]-1)&-1;
+                                     Pb(7,regs[0],ga);
+                                     regs[7]=(regs[7]+(self.df<<0))&-1;
+                                     regs[1]=(regs[1]-1)&-1;
                                      if(Da&0x0010){
                                          if(!Tb(4))break jd;
                                      }else{
@@ -4749,19 +4752,19 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      }Eb=Gb;
                                  }
                              }else{
-                                 fa=xa[7];
+                                 fa=regs[7];
                                  ga=ab();
-                                 Pb(7,xa[0],ga);
-                                 xa[7]=(xa[7]+(wa.df<<0))&-1;
+                                 Pb(7,regs[0],ga);
+                                 regs[7]=(regs[7]+(self.df<<0))&-1;
                              };
                              break jd;
                    case 0xaf:if(Da&(0x0010|0x0020)){
-                                 if(xa[1]){
-                                     fa=xa[7];
+                                 if(regs[1]){
+                                     fa=regs[7];
                                      ga=eb();
-                                     Zb(7,xa[0],ga);
-                                     xa[7]=(xa[7]+(wa.df<<2))&-1;
-                                     xa[1]=(xa[1]-1)&-1;
+                                     Zb(7,regs[0],ga);
+                                     regs[7]=(regs[7]+(self.df<<2))&-1;
+                                     regs[1]=(regs[1]-1)&-1;
                                      if(Da&0x0010){
                                          if(!Tb(4))break jd;
                                      }else{
@@ -4769,10 +4772,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      }Eb=Gb;
                                  }
                              }else{
-                                 fa=xa[7];
+                                 fa=regs[7];
                                  ga=eb();
-                                 Zb(7,xa[0],ga);
-                                 xa[7]=(xa[7]+(wa.df<<2))&-1;
+                                 Zb(7,regs[0],ga);
+                                 regs[7]=(regs[7]+(self.df<<2))&-1;
                              };
                              break jd;
                    case 0xd8:
@@ -4782,7 +4785,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xdc:
                    case 0xdd:
                    case 0xde:
-                   case 0xdf:if(wa.cr0&((1<<2)|(1<<3))){
+                   case 0xdf:if(self.cr0&((1<<2)|(1<<3))){
                                  rc(7);
                              }Ea=phys_mem8[Eb++];
                              ;
@@ -4796,68 +4799,68 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              }
                              break jd;
                    case 0x9b:break jd;
-                   case 0xe4:ye=(wa.eflags>>12)&3;
-                             if(wa.cpl>ye)rc(13);
+                   case 0xe4:ye=(self.eflags>>12)&3;
+                             if(self.cpl>ye)rc(13);
                              ga=phys_mem8[Eb++];
                              ;
-                             Nb(0,wa.ld8_port(ga));
+                             Nb(0,self.ld8_port(ga));
                              {
-                                 if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                 if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
-                   case 0xe5:ye=(wa.eflags>>12)&3;
-                             if(wa.cpl>ye)rc(13);
+                   case 0xe5:ye=(self.eflags>>12)&3;
+                             if(self.cpl>ye)rc(13);
                              ga=phys_mem8[Eb++];
                              ;
-                             xa[0]=wa.ld32_port(ga);
+                             regs[0]=self.ld32_port(ga);
                              {
-                                 if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                 if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
-                   case 0xe6:ye=(wa.eflags>>12)&3;
-                             if(wa.cpl>ye)rc(13);
+                   case 0xe6:ye=(self.eflags>>12)&3;
+                             if(self.cpl>ye)rc(13);
                              ga=phys_mem8[Eb++];
                              ;
-                             wa.st8_port(ga,xa[0]&0xff);
+                             self.st8_port(ga,regs[0]&0xff);
                              {
-                                 if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                 if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
-                   case 0xe7:ye=(wa.eflags>>12)&3;
-                             if(wa.cpl>ye)rc(13);
+                   case 0xe7:ye=(self.eflags>>12)&3;
+                             if(self.cpl>ye)rc(13);
                              ga=phys_mem8[Eb++];
                              ;
-                             wa.st32_port(ga,xa[0]);
+                             self.st32_port(ga,regs[0]);
                              {
-                                 if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                 if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
-                   case 0xec:ye=(wa.eflags>>12)&3;
-                             if(wa.cpl>ye)rc(13);
-                             Nb(0,wa.ld8_port(xa[2]&0xffff));
+                   case 0xec:ye=(self.eflags>>12)&3;
+                             if(self.cpl>ye)rc(13);
+                             Nb(0,self.ld8_port(regs[2]&0xffff));
                              {
-                                 if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                 if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
-                   case 0xed:ye=(wa.eflags>>12)&3;
-                             if(wa.cpl>ye)rc(13);
-                             xa[0]=wa.ld32_port(xa[2]&0xffff);
+                   case 0xed:ye=(self.eflags>>12)&3;
+                             if(self.cpl>ye)rc(13);
+                             regs[0]=self.ld32_port(regs[2]&0xffff);
                              {
-                                 if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                 if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
-                   case 0xee:ye=(wa.eflags>>12)&3;
-                             if(wa.cpl>ye)rc(13);
-                             wa.st8_port(xa[2]&0xffff,xa[0]&0xff);
+                   case 0xee:ye=(self.eflags>>12)&3;
+                             if(self.cpl>ye)rc(13);
+                             self.st8_port(regs[2]&0xffff,regs[0]&0xff);
                              {
-                                 if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                 if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
-                   case 0xef:ye=(wa.eflags>>12)&3;
-                             if(wa.cpl>ye)rc(13);
-                             wa.st32_port(xa[2]&0xffff,xa[0]);
+                   case 0xef:ye=(self.eflags>>12)&3;
+                             if(self.cpl>ye)rc(13);
+                             self.st32_port(regs[2]&0xffff,regs[0]);
                              {
-                                 if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                 if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
                    case 0x27:Le();
@@ -4964,61 +4967,61 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 0x4f:Ea=phys_mem8[Eb++];
                                            ;
                                            if((Ea>>6)==3){
-                                               ga=xa[Ea&7];
+                                               ga=regs[Ea&7];
                                            }else{
                                                fa=Ib(Ea);
                                                ga=eb();
-                                           }if(Tb(b&0xf))xa[(Ea>>3)&7]=ga;
+                                           }if(Tb(b&0xf))regs[(Ea>>3)&7]=ga;
                                            break jd;
                                  case 0xb6:Ea=phys_mem8[Eb++];
                                            ;
                                            Ga=(Ea>>3)&7;
                                            if((Ea>>6)==3){
                                                Fa=Ea&7;
-                                               ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
+                                               ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                                            }else{
                                                fa=Ib(Ea);
                                                ga=ab();
-                                           }xa[Ga]=ga;
+                                           }regs[Ga]=ga;
                                            break jd;
                                  case 0xb7:Ea=phys_mem8[Eb++];
                                            ;
                                            Ga=(Ea>>3)&7;
                                            if((Ea>>6)==3){
-                                               ga=xa[Ea&7];
+                                               ga=regs[Ea&7];
                                            }else{
                                                fa=Ib(Ea);
                                                ga=cb();
-                                           }xa[Ga]=ga&0xffff;
+                                           }regs[Ga]=ga&0xffff;
                                            break jd;
                                  case 0xbe:Ea=phys_mem8[Eb++];
                                            ;
                                            Ga=(Ea>>3)&7;
                                            if((Ea>>6)==3){
                                                Fa=Ea&7;
-                                               ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
+                                               ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                                            }else{
                                                fa=Ib(Ea);
                                                ga=ab();
-                                           }xa[Ga]=(ga<<24)>>24;
+                                           }regs[Ga]=(ga<<24)>>24;
                                            break jd;
                                  case 0xbf:Ea=phys_mem8[Eb++];
                                            ;
                                            Ga=(Ea>>3)&7;
                                            if((Ea>>6)==3){
-                                               ga=xa[Ea&7];
+                                               ga=regs[Ea&7];
                                            }else{
                                                fa=Ib(Ea);
                                                ga=cb();
-                                           }xa[Ga]=(ga<<16)>>16;
+                                           }regs[Ga]=(ga<<16)>>16;
                                            break jd;
                                  case 0x00:Ea=phys_mem8[Eb++];
                                            ;
                                            Ja=(Ea>>3)&7;
                                            switch(Ja){
                                                case 0:
-                                               case 1:if(Ja==0)ga=wa.ldt.selector;
-                                                          else ga=wa.tr.selector;
+                                               case 1:if(Ja==0)ga=self.ldt.selector;
+                                                          else ga=self.tr.selector;
                                                           if((Ea>>6)==3){
                                                               Ob(Ea&7,ga);
                                                           }else{
@@ -5026,17 +5029,17 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                               ob(ga);
                                                           }
                                                           break;
-                                               case 2:if(wa.cpl!=0)rc(13);
+                                               case 2:if(self.cpl!=0)rc(13);
                                                           if((Ea>>6)==3){
-                                                              ga=xa[Ea&7]&0xffff;
+                                                              ga=regs[Ea&7]&0xffff;
                                                           }else{
                                                               fa=Ib(Ea);
                                                               ga=cb();
                                                           }de(ga);
                                                       break;
-                                               case 3:if(wa.cpl!=0)rc(13);
+                                               case 3:if(self.cpl!=0)rc(13);
                                                           if((Ea>>6)==3){
-                                                              ga=xa[Ea&7]&0xffff;
+                                                              ga=regs[Ea&7]&0xffff;
                                                           }else{
                                                               fa=Ib(Ea);
                                                               ga=cb();
@@ -5067,38 +5070,38 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                case 7:if(this.cpl!=0)rc(13);
                                                           if((Ea>>6)==3)rc(6);
                                                       fa=Ib(Ea);
-                                                      wa.tlb_flush_page(fa&-4096);
+                                                      self.tlb_flush_page(fa&-4096);
                                                       break;
                                                default:rc(6);
                                            }
                                            break jd;
-                                 case 0x20:if(wa.cpl!=0)rc(13);
+                                 case 0x20:if(self.cpl!=0)rc(13);
                                                Ea=phys_mem8[Eb++];
                                            ;
                                            if((Ea>>6)!=3)rc(6);
                                            Ga=(Ea>>3)&7;
                                            switch(Ga){
-                                               case 0:ga=wa.cr0;
+                                               case 0:ga=self.cr0;
                                                       break;
-                                               case 2:ga=wa.cr2;
+                                               case 2:ga=self.cr2;
                                                       break;
-                                               case 3:ga=wa.cr3;
+                                               case 3:ga=self.cr3;
                                                       break;
-                                               case 4:ga=wa.cr4;
+                                               case 4:ga=self.cr4;
                                                       break;
                                                default:rc(6);
-                                           }xa[Ea&7]=ga;
+                                           }regs[Ea&7]=ga;
                                            break jd;
-                                 case 0x22:if(wa.cpl!=0)rc(13);
+                                 case 0x22:if(self.cpl!=0)rc(13);
                                                Ea=phys_mem8[Eb++];
                                            ;
                                            if((Ea>>6)!=3)rc(6);
                                            Ga=(Ea>>3)&7;
-                                           ga=xa[Ea&7];
+                                           ga=regs[Ea&7];
                                            switch(Ga){
                                                case 0:td(ga);
                                                       break;
-                                               case 2:wa.cr2=ga;
+                                               case 2:self.cr2=ga;
                                                       break;
                                                case 3:vd(ga);
                                                       break;
@@ -5107,15 +5110,15 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                default:rc(6);
                                            }
                                            break jd;
-                                 case 0x06:if(wa.cpl!=0)rc(13);
-                                               td(wa.cr0&~(1<<3));
+                                 case 0x06:if(self.cpl!=0)rc(13);
+                                               td(self.cr0&~(1<<3));
                                            break jd;
-                                 case 0x23:if(wa.cpl!=0)rc(13);
+                                 case 0x23:if(self.cpl!=0)rc(13);
                                                Ea=phys_mem8[Eb++];
                                            ;
                                            if((Ea>>6)!=3)rc(6);
                                            Ga=(Ea>>3)&7;
-                                           ga=xa[Ea&7];
+                                           ga=regs[Ea&7];
                                            if(Ga==4||Ga==5)rc(6);
                                            break jd;
                                  case 0xb2:{
@@ -5127,7 +5130,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                fa+=4;
                                                Ha=cb();
                                                ge(2,Ha);
-                                               xa[(Ea>>3)&7]=ga;
+                                               regs[(Ea>>3)&7]=ga;
                                            };
                                            break jd;
                                  case 0xb4:{
@@ -5139,7 +5142,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                fa+=4;
                                                Ha=cb();
                                                ge(4,Ha);
-                                               xa[(Ea>>3)&7]=ga;
+                                               regs[(Ea>>3)&7]=ga;
                                            };
                                            break jd;
                                  case 0xb5:{
@@ -5151,19 +5154,19 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                fa+=4;
                                                Ha=cb();
                                                ge(5,Ha);
-                                               xa[(Ea>>3)&7]=ga;
+                                               regs[(Ea>>3)&7]=ga;
                                            };
                                            break jd;
                                  case 0xa2:Ce();
                                            break jd;
                                  case 0xa4:Ea=phys_mem8[Eb++];
                                            ;
-                                           Ha=xa[(Ea>>3)&7];
+                                           Ha=regs[(Ea>>3)&7];
                                            if((Ea>>6)==3){
                                                Ia=phys_mem8[Eb++];
                                                ;
                                                Fa=Ea&7;
-                                               xa[Fa]=hc(xa[Fa],Ha,Ia);
+                                               regs[Fa]=hc(regs[Fa],Ha,Ia);
                                            }else{
                                                fa=Ib(Ea);
                                                Ia=phys_mem8[Eb++];
@@ -5175,11 +5178,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                            break jd;
                                  case 0xa5:Ea=phys_mem8[Eb++];
                                            ;
-                                           Ha=xa[(Ea>>3)&7];
-                                           Ia=xa[1];
+                                           Ha=regs[(Ea>>3)&7];
+                                           Ia=regs[1];
                                            if((Ea>>6)==3){
                                                Fa=Ea&7;
-                                               xa[Fa]=hc(xa[Fa],Ha,Ia);
+                                               regs[Fa]=hc(regs[Fa],Ha,Ia);
                                            }else{
                                                fa=Ib(Ea);
                                                ga=kb();
@@ -5189,12 +5192,12 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                            break jd;
                                  case 0xac:Ea=phys_mem8[Eb++];
                                            ;
-                                           Ha=xa[(Ea>>3)&7];
+                                           Ha=regs[(Ea>>3)&7];
                                            if((Ea>>6)==3){
                                                Ia=phys_mem8[Eb++];
                                                ;
                                                Fa=Ea&7;
-                                               xa[Fa]=jc(xa[Fa],Ha,Ia);
+                                               regs[Fa]=jc(regs[Fa],Ha,Ia);
                                            }else{
                                                fa=Ib(Ea);
                                                Ia=phys_mem8[Eb++];
@@ -5206,11 +5209,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                            break jd;
                                  case 0xad:Ea=phys_mem8[Eb++];
                                            ;
-                                           Ha=xa[(Ea>>3)&7];
-                                           Ia=xa[1];
+                                           Ha=regs[(Ea>>3)&7];
+                                           Ia=regs[1];
                                            if((Ea>>6)==3){
                                                Fa=Ea&7;
-                                               xa[Fa]=jc(xa[Fa],Ha,Ia);
+                                               regs[Fa]=jc(regs[Fa],Ha,Ia);
                                            }else{
                                                fa=Ib(Ea);
                                                ga=kb();
@@ -5223,7 +5226,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                            Ja=(Ea>>3)&7;
                                            switch(Ja){
                                                case 4:if((Ea>>6)==3){
-                                                          ga=xa[Ea&7];
+                                                          ga=regs[Ea&7];
                                                           Ha=phys_mem8[Eb++];
                                                           ;
                                                       }else{
@@ -5237,7 +5240,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                           Fa=Ea&7;
                                                           Ha=phys_mem8[Eb++];
                                                           ;
-                                                          xa[Fa]=lc(xa[Fa],Ha);
+                                                          regs[Fa]=lc(regs[Fa],Ha);
                                                       }else{
                                                           fa=Ib(Ea);
                                                           Ha=phys_mem8[Eb++];
@@ -5251,7 +5254,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                           Fa=Ea&7;
                                                           Ha=phys_mem8[Eb++];
                                                           ;
-                                                          xa[Fa]=mc(xa[Fa],Ha);
+                                                          regs[Fa]=mc(regs[Fa],Ha);
                                                       }else{
                                                           fa=Ib(Ea);
                                                           Ha=phys_mem8[Eb++];
@@ -5265,7 +5268,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                           Fa=Ea&7;
                                                           Ha=phys_mem8[Eb++];
                                                           ;
-                                                          xa[Fa]=nc(xa[Fa],Ha);
+                                                          regs[Fa]=nc(regs[Fa],Ha);
                                                       }else{
                                                           fa=Ib(Ea);
                                                           Ha=phys_mem8[Eb++];
@@ -5280,9 +5283,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                            break jd;
                                  case 0xa3:Ea=phys_mem8[Eb++];
                                            ;
-                                           Ha=xa[(Ea>>3)&7];
+                                           Ha=regs[(Ea>>3)&7];
                                            if((Ea>>6)==3){
-                                               ga=xa[Ea&7];
+                                               ga=regs[Ea&7];
                                            }else{
                                                fa=Ib(Ea);
                                                fa=(fa+((Ha>>5)<<2))&-1;
@@ -5291,10 +5294,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                            break jd;
                                  case 0xab:Ea=phys_mem8[Eb++];
                                            ;
-                                           Ha=xa[(Ea>>3)&7];
+                                           Ha=regs[(Ea>>3)&7];
                                            if((Ea>>6)==3){
                                                Fa=Ea&7;
-                                               xa[Fa]=lc(xa[Fa],Ha);
+                                               regs[Fa]=lc(regs[Fa],Ha);
                                            }else{
                                                fa=Ib(Ea);
                                                fa=(fa+((Ha>>5)<<2))&-1;
@@ -5305,10 +5308,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                            break jd;
                                  case 0xb3:Ea=phys_mem8[Eb++];
                                            ;
-                                           Ha=xa[(Ea>>3)&7];
+                                           Ha=regs[(Ea>>3)&7];
                                            if((Ea>>6)==3){
                                                Fa=Ea&7;
-                                               xa[Fa]=mc(xa[Fa],Ha);
+                                               regs[Fa]=mc(regs[Fa],Ha);
                                            }else{
                                                fa=Ib(Ea);
                                                fa=(fa+((Ha>>5)<<2))&-1;
@@ -5319,10 +5322,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                            break jd;
                                  case 0xbb:Ea=phys_mem8[Eb++];
                                            ;
-                                           Ha=xa[(Ea>>3)&7];
+                                           Ha=regs[(Ea>>3)&7];
                                            if((Ea>>6)==3){
                                                Fa=Ea&7;
-                                               xa[Fa]=nc(xa[Fa],Ha);
+                                               regs[Fa]=nc(regs[Fa],Ha);
                                            }else{
                                                fa=Ib(Ea);
                                                fa=(fa+((Ha>>5)<<2))&-1;
@@ -5335,50 +5338,50 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                            ;
                                            Ga=(Ea>>3)&7;
                                            if((Ea>>6)==3){
-                                               Ha=xa[Ea&7];
+                                               Ha=regs[Ea&7];
                                            }else{
                                                fa=Ib(Ea);
                                                Ha=eb();
-                                           }xa[Ga]=oc(xa[Ga],Ha);
+                                           }regs[Ga]=oc(regs[Ga],Ha);
                                            break jd;
                                  case 0xbd:Ea=phys_mem8[Eb++];
                                            ;
                                            Ga=(Ea>>3)&7;
                                            if((Ea>>6)==3){
-                                               Ha=xa[Ea&7];
+                                               Ha=regs[Ea&7];
                                            }else{
                                                fa=Ib(Ea);
                                                Ha=eb();
-                                           }xa[Ga]=pc(xa[Ga],Ha);
+                                           }regs[Ga]=pc(regs[Ga],Ha);
                                            break jd;
                                  case 0xaf:Ea=phys_mem8[Eb++];
                                            ;
                                            Ga=(Ea>>3)&7;
                                            if((Ea>>6)==3){
-                                               Ha=xa[Ea&7];
+                                               Ha=regs[Ea&7];
                                            }else{
                                                fa=Ib(Ea);
                                                Ha=eb();
-                                           }xa[Ga]=Kc(xa[Ga],Ha);
+                                           }regs[Ga]=Kc(regs[Ga],Ha);
                                            break jd;
-                                 case 0x31:if((wa.cr4&(1<<2))&&wa.cpl!=0)rc(13);
+                                 case 0x31:if((self.cr4&(1<<2))&&self.cpl!=0)rc(13);
                                                ga=get_cycle_count();
-                                           xa[0]=ga>>>0;
-                                           xa[2]=(ga/0x100000000)>>>0;
+                                           regs[0]=ga>>>0;
+                                           regs[2]=(ga/0x100000000)>>>0;
                                            break jd;
                                  case 0xc0:Ea=phys_mem8[Eb++];
                                            ;
                                            Ga=(Ea>>3)&7;
                                            if((Ea>>6)==3){
                                                Fa=Ea&7;
-                                               ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
-                                               Ha=Pb(0,ga,((xa[Ga&3]>>((Ga&4)<<1))&0xff));
+                                               ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
+                                               Ha=Pb(0,ga,((regs[Ga&3]>>((Ga&4)<<1))&0xff));
                                                Nb(Ga,ga);
                                                Nb(Fa,Ha);
                                            }else{
                                                fa=Ib(Ea);
                                                ga=gb();
-                                               Ha=Pb(0,ga,((xa[Ga&3]>>((Ga&4)<<1))&0xff));
+                                               Ha=Pb(0,ga,((regs[Ga&3]>>((Ga&4)<<1))&0xff));
                                                mb(Ha);
                                                Nb(Ga,ga);
                                            }
@@ -5388,16 +5391,16 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                            Ga=(Ea>>3)&7;
                                            if((Ea>>6)==3){
                                                Fa=Ea&7;
-                                               ga=xa[Fa];
-                                               Ha=Zb(0,ga,xa[Ga]);
-                                               xa[Ga]=ga;
-                                               xa[Fa]=Ha;
+                                               ga=regs[Fa];
+                                               Ha=Zb(0,ga,regs[Ga]);
+                                               regs[Ga]=ga;
+                                               regs[Fa]=Ha;
                                            }else{
                                                fa=Ib(Ea);
                                                ga=kb();
-                                               Ha=Zb(0,ga,xa[Ga]);
+                                               Ha=Zb(0,ga,regs[Ga]);
                                                qb(Ha);
-                                               xa[Ga]=ga;
+                                               regs[Ga]=ga;
                                            }
                                            break jd;
                                  case 0xb1:Ea=phys_mem8[Eb++];
@@ -5405,50 +5408,50 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                            Ga=(Ea>>3)&7;
                                            if((Ea>>6)==3){
                                                Fa=Ea&7;
-                                               ga=xa[Fa];
-                                               Ha=Zb(5,xa[0],ga);
+                                               ga=regs[Fa];
+                                               Ha=Zb(5,regs[0],ga);
                                                if(Ha==0){
-                                                   xa[Fa]=xa[Ga];
+                                                   regs[Fa]=regs[Ga];
                                                }else{
-                                                   xa[0]=ga;
+                                                   regs[0]=ga;
                                                }
                                            }else{
                                                fa=Ib(Ea);
                                                ga=kb();
-                                               Ha=Zb(5,xa[0],ga);
+                                               Ha=Zb(5,regs[0],ga);
                                                if(Ha==0){
-                                                   qb(xa[Ga]);
+                                                   qb(regs[Ga]);
                                                }else{
-                                                   xa[0]=ga;
+                                                   regs[0]=ga;
                                                }
                                            }
                                            break jd;
                                  case 0xa0:{
-                                               ga=wa.segs[4].selector;
-                                               fa=(xa[4]-4)&-1;
+                                               ga=self.segs[4].selector;
+                                               fa=(regs[4]-4)&-1;
                                                qb(ga);
-                                               xa[4]=fa;
+                                               regs[4]=fa;
                                            };
                                            break jd;
                                  case 0xa8:{
-                                               ga=wa.segs[5].selector;
-                                               fa=(xa[4]-4)&-1;
+                                               ga=self.segs[5].selector;
+                                               fa=(regs[4]-4)&-1;
                                                qb(ga);
-                                               xa[4]=fa;
+                                               regs[4]=fa;
                                            };
                                            break jd;
                                  case 0xa1:{
-                                               fa=xa[4];
+                                               fa=regs[4];
                                                ga=eb();
                                                ge(4,ga&0xffff);
-                                               xa[4]=(xa[4]+4)&-1;
+                                               regs[4]=(regs[4]+4)&-1;
                                            };
                                            break jd;
                                  case 0xa9:{
-                                               fa=xa[4];
+                                               fa=regs[4];
                                                ga=eb();
                                                ge(5,ga&0xffff);
-                                               xa[4]=(xa[4]+4)&-1;
+                                               regs[4]=(regs[4]+4)&-1;
                                            };
                                            break jd;
                                  case 0xc8:
@@ -5459,9 +5462,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 0xcd:
                                  case 0xce:
                                  case 0xcf:Ga=b&7;
-                                           ga=xa[Ga];
+                                           ga=regs[Ga];
                                            ga=(ga>>>24)|((ga>>8)&0x0000ff00)|((ga<<8)&0x00ff0000)|(ga<<24);
-                                           xa[Ga]=ga;
+                                           regs[Ga]=ga;
                                            break jd;
                                  case 0x02:
                                  case 0x03:
@@ -5668,7 +5671,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           break;
                                case 0x189:Ea=phys_mem8[Eb++];
                                           ;
-                                          ga=xa[(Ea>>3)&7];
+                                          ga=regs[(Ea>>3)&7];
                                           if((Ea>>6)==3){
                                               Ob(Ea&7,ga);
                                           }else{
@@ -5679,7 +5682,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                case 0x18b:Ea=phys_mem8[Eb++];
                                           ;
                                           if((Ea>>6)==3){
-                                              ga=xa[Ea&7];
+                                              ga=regs[Ea&7];
                                           }else{
                                               fa=Ib(Ea);
                                               ga=cb();
@@ -5699,7 +5702,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           Ob(0,ga);
                                           break jd;
                                case 0x1a3:fa=Mb();
-                                          ob(xa[0]);
+                                          ob(regs[0]);
                                           break jd;
                                case 0x1c7:Ea=phys_mem8[Eb++];
                                           ;
@@ -5719,8 +5722,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                case 0x195:
                                case 0x196:
                                case 0x197:Ga=b&7;
-                                          ga=xa[0];
-                                          Ob(0,xa[Ga]);
+                                          ga=regs[0];
+                                          Ob(0,regs[Ga]);
                                           Ob(Ga,ga);
                                           break jd;
                                case 0x187:Ea=phys_mem8[Eb++];
@@ -5728,12 +5731,12 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           Ga=(Ea>>3)&7;
                                           if((Ea>>6)==3){
                                               Fa=Ea&7;
-                                              ga=xa[Fa];
-                                              Ob(Fa,xa[Ga]);
+                                              ga=regs[Fa];
+                                              Ob(Fa,regs[Ga]);
                                           }else{
                                               fa=Ib(Ea);
                                               ga=ib();
-                                              ob(xa[Ga]);
+                                              ob(regs[Ga]);
                                           }Ob(Ga,ga);
                                           break jd;
                                case 0x101:
@@ -5746,10 +5749,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                case 0x139:Ea=phys_mem8[Eb++];
                                           ;
                                           Ja=(b>>3)&7;
-                                          Ha=xa[(Ea>>3)&7];
+                                          Ha=regs[(Ea>>3)&7];
                                           if((Ea>>6)==3){
                                               Fa=Ea&7;
-                                              Ob(Fa,Wb(Ja,xa[Fa],Ha));
+                                              Ob(Fa,Wb(Ja,regs[Fa],Ha));
                                           }else{
                                               fa=Ib(Ea);
                                               if(Ja!=7){
@@ -5774,11 +5777,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           Ja=(b>>3)&7;
                                           Ga=(Ea>>3)&7;
                                           if((Ea>>6)==3){
-                                              Ha=xa[Ea&7];
+                                              Ha=regs[Ea&7];
                                           }else{
                                               fa=Ib(Ea);
                                               Ha=cb();
-                                          }Ob(Ga,Wb(Ja,xa[Ga],Ha));
+                                          }Ob(Ga,Wb(Ja,regs[Ga],Ha));
                                           break jd;
                                case 0x105:
                                case 0x10d:
@@ -5789,7 +5792,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                case 0x135:
                                case 0x13d:Ha=Hb();
                                           Ja=(b>>3)&7;
-                                          Ob(0,Wb(Ja,xa[0],Ha));
+                                          Ob(0,Wb(Ja,regs[0],Ha));
                                           break jd;
                                case 0x181:Ea=phys_mem8[Eb++];
                                           ;
@@ -5797,7 +5800,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           if((Ea>>6)==3){
                                               Fa=Ea&7;
                                               Ha=Hb();
-                                              xa[Fa]=Wb(Ja,xa[Fa],Ha);
+                                              regs[Fa]=Wb(Ja,regs[Fa],Ha);
                                           }else{
                                               fa=Ib(Ea);
                                               Ha=Hb();
@@ -5818,7 +5821,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                               Fa=Ea&7;
                                               Ha=((phys_mem8[Eb++]<<24)>>24);
                                               ;
-                                              Ob(Fa,Wb(Ja,xa[Fa],Ha));
+                                              Ob(Fa,Wb(Ja,regs[Fa],Ha));
                                           }else{
                                               fa=Ib(Ea);
                                               Ha=((phys_mem8[Eb++]<<24)>>24);
@@ -5841,7 +5844,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                case 0x145:
                                case 0x146:
                                case 0x147:Ga=b&7;
-                                          Ob(Ga,Xb(xa[Ga]));
+                                          Ob(Ga,Xb(regs[Ga]));
                                           break jd;
                                case 0x148:
                                case 0x149:
@@ -5851,13 +5854,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                case 0x14d:
                                case 0x14e:
                                case 0x14f:Ga=b&7;
-                                          Ob(Ga,Yb(xa[Ga]));
+                                          Ob(Ga,Yb(regs[Ga]));
                                           break jd;
                                case 0x16b:Ea=phys_mem8[Eb++];
                                           ;
                                           Ga=(Ea>>3)&7;
                                           if((Ea>>6)==3){
-                                              Ha=xa[Ea&7];
+                                              Ha=regs[Ea&7];
                                           }else{
                                               fa=Ib(Ea);
                                               Ha=cb();
@@ -5869,7 +5872,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           ;
                                           Ga=(Ea>>3)&7;
                                           if((Ea>>6)==3){
-                                              Ha=xa[Ea&7];
+                                              Ha=regs[Ea&7];
                                           }else{
                                               fa=Ib(Ea);
                                               Ha=cb();
@@ -5879,16 +5882,16 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                case 0x185:Ea=phys_mem8[Eb++];
                                           ;
                                           if((Ea>>6)==3){
-                                              ga=xa[Ea&7];
+                                              ga=regs[Ea&7];
                                           }else{
                                               fa=Ib(Ea);
                                               ga=cb();
-                                          }Ha=xa[(Ea>>3)&7];
-                                          za=ga&Ha;
+                                          }Ha=regs[(Ea>>3)&7];
+                                          cc_dst=ga&Ha;
                                           Aa=13;
                                           break jd;
                                case 0x1a9:Ha=Hb();
-                                          za=xa[0]&Ha;
+                                          cc_dst=regs[0]&Ha;
                                           Aa=13;
                                           break jd;
                                case 0x1f7:Ea=phys_mem8[Eb++];
@@ -5896,17 +5899,17 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           Ja=(Ea>>3)&7;
                                           switch(Ja){
                                               case 0:if((Ea>>6)==3){
-                                                         ga=xa[Ea&7];
+                                                         ga=regs[Ea&7];
                                                      }else{
                                                          fa=Ib(Ea);
                                                          ga=cb();
                                                      }Ha=Hb();
-                                                     za=ga&Ha;
+                                                     cc_dst=ga&Ha;
                                                      Aa=13;
                                                      break;
                                               case 2:if((Ea>>6)==3){
                                                          Fa=Ea&7;
-                                                         Ob(Fa,~xa[Fa]);
+                                                         Ob(Fa,~regs[Fa]);
                                                      }else{
                                                          fa=Ib(Ea);
                                                          ga=ib();
@@ -5916,7 +5919,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                      break;
                                               case 3:if((Ea>>6)==3){
                                                          Fa=Ea&7;
-                                                         Ob(Fa,Wb(5,0,xa[Fa]));
+                                                         Ob(Fa,Wb(5,0,regs[Fa]));
                                                      }else{
                                                          fa=Ib(Ea);
                                                          ga=ib();
@@ -5925,32 +5928,32 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                      }
                                                      break;
                                               case 4:if((Ea>>6)==3){
-                                                         ga=xa[Ea&7];
+                                                         ga=regs[Ea&7];
                                                      }else{
                                                          fa=Ib(Ea);
                                                          ga=cb();
-                                                     }ga=Ec(xa[0],ga);
+                                                     }ga=Ec(regs[0],ga);
                                                      Ob(0,ga);
                                                      Ob(2,ga>>16);
                                                      break;
                                               case 5:if((Ea>>6)==3){
-                                                         ga=xa[Ea&7];
+                                                         ga=regs[Ea&7];
                                                      }else{
                                                          fa=Ib(Ea);
                                                          ga=cb();
-                                                     }ga=Fc(xa[0],ga);
+                                                     }ga=Fc(regs[0],ga);
                                                      Ob(0,ga);
                                                      Ob(2,ga>>16);
                                                      break;
                                               case 6:if((Ea>>6)==3){
-                                                         ga=xa[Ea&7];
+                                                         ga=regs[Ea&7];
                                                      }else{
                                                          fa=Ib(Ea);
                                                          ga=cb();
                                                      }tc(ga);
                                                      break;
                                               case 7:if((Ea>>6)==3){
-                                                         ga=xa[Ea&7];
+                                                         ga=regs[Ea&7];
                                                      }else{
                                                          fa=Ib(Ea);
                                                          ga=cb();
@@ -5966,7 +5969,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                               Ha=phys_mem8[Eb++];
                                               ;
                                               Fa=Ea&7;
-                                              Ob(Fa,fc(Ja,xa[Fa],Ha));
+                                              Ob(Fa,fc(Ja,regs[Fa],Ha));
                                           }else{
                                               fa=Ib(Ea);
                                               Ha=phys_mem8[Eb++];
@@ -5981,7 +5984,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           Ja=(Ea>>3)&7;
                                           if((Ea>>6)==3){
                                               Fa=Ea&7;
-                                              Ob(Fa,fc(Ja,xa[Fa],1));
+                                              Ob(Fa,fc(Ja,regs[Fa],1));
                                           }else{
                                               fa=Ib(Ea);
                                               ga=ib();
@@ -5992,10 +5995,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                case 0x1d3:Ea=phys_mem8[Eb++];
                                           ;
                                           Ja=(Ea>>3)&7;
-                                          Ha=xa[1]&0xff;
+                                          Ha=regs[1]&0xff;
                                           if((Ea>>6)==3){
                                               Fa=Ea&7;
-                                              Ob(Fa,fc(Ja,xa[Fa],Ha));
+                                              Ob(Fa,fc(Ja,regs[Fa],Ha));
                                           }else{
                                               fa=Ib(Ea);
                                               ga=ib();
@@ -6003,9 +6006,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                               ob(ga);
                                           }
                                           break jd;
-                               case 0x198:Ob(0,(xa[0]<<24)>>24);
+                               case 0x198:Ob(0,(regs[0]<<24)>>24);
                                           break jd;
-                               case 0x199:Ob(2,(xa[0]<<16)>>31);
+                               case 0x199:Ob(2,(regs[0]<<16)>>31);
                                           break jd;
                                case 0x1ff:Ea=phys_mem8[Eb++];
                                           ;
@@ -6013,7 +6016,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           switch(Ja){
                                               case 0:if((Ea>>6)==3){
                                                          Fa=Ea&7;
-                                                         Ob(Fa,Xb(xa[Fa]));
+                                                         Ob(Fa,Xb(regs[Fa]));
                                                      }else{
                                                          fa=Ib(Ea);
                                                          ga=ib();
@@ -6023,7 +6026,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                      break;
                                               case 1:if((Ea>>6)==3){
                                                          Fa=Ea&7;
-                                                         Ob(Fa,Yb(xa[Fa]));
+                                                         Ob(Fa,Yb(regs[Fa]));
                                                      }else{
                                                          fa=Ib(Ea);
                                                          ga=ib();
@@ -6040,37 +6043,37 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           break jd;
                                case 0x190:break jd;
                                case 0x1a5:if(Da&(0x0010|0x0020)){
-                                              if(xa[1]){
-                                                  if(16===32&&(xa[1]>>>0)>=4&&wa.df==1&&((xa[6]|xa[7])&3)==0&&bd()){
+                                              if(regs[1]){
+                                                  if(16===32&&(regs[1]>>>0)>=4&&self.df==1&&((regs[6]|regs[7])&3)==0&&bd()){
                                                   }else{
-                                                      fa=xa[6];
+                                                      fa=regs[6];
                                                       ga=cb();
-                                                      fa=xa[7];
+                                                      fa=regs[7];
                                                       ob(ga);
-                                                      xa[6]=(xa[6]+(wa.df<<1))&-1;
-                                                      xa[7]=(xa[7]+(wa.df<<1))&-1;
-                                                      xa[1]=(xa[1]-1)&-1;
+                                                      regs[6]=(regs[6]+(self.df<<1))&-1;
+                                                      regs[7]=(regs[7]+(self.df<<1))&-1;
+                                                      regs[1]=(regs[1]-1)&-1;
                                                   }Eb=Gb;
                                               }
                                           }else{
-                                              fa=xa[6];
+                                              fa=regs[6];
                                               ga=cb();
-                                              fa=xa[7];
+                                              fa=regs[7];
                                               ob(ga);
-                                              xa[6]=(xa[6]+(wa.df<<1))&-1;
-                                              xa[7]=(xa[7]+(wa.df<<1))&-1;
+                                              regs[6]=(regs[6]+(self.df<<1))&-1;
+                                              regs[7]=(regs[7]+(self.df<<1))&-1;
                                           };
                                           break jd;
                                case 0x1a7:if(Da&(0x0010|0x0020)){
-                                              if(xa[1]){
-                                                  fa=xa[6];
+                                              if(regs[1]){
+                                                  fa=regs[6];
                                                   ga=cb();
-                                                  fa=xa[7];
+                                                  fa=regs[7];
                                                   Ha=cb();
                                                   Wb(7,ga,Ha);
-                                                  xa[6]=(xa[6]+(wa.df<<1))&-1;
-                                                  xa[7]=(xa[7]+(wa.df<<1))&-1;
-                                                  xa[1]=(xa[1]-1)&-1;
+                                                  regs[6]=(regs[6]+(self.df<<1))&-1;
+                                                  regs[7]=(regs[7]+(self.df<<1))&-1;
+                                                  regs[1]=(regs[1]-1)&-1;
                                                   if(Da&0x0010){
                                                       if(!Tb(4))break jd;
                                                   }else{
@@ -6078,38 +6081,38 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                   }Eb=Gb;
                                               }
                                           }else{
-                                              fa=xa[6];
+                                              fa=regs[6];
                                               ga=cb();
-                                              fa=xa[7];
+                                              fa=regs[7];
                                               Ha=cb();
                                               Wb(7,ga,Ha);
-                                              xa[6]=(xa[6]+(wa.df<<1))&-1;
-                                              xa[7]=(xa[7]+(wa.df<<1))&-1;
+                                              regs[6]=(regs[6]+(self.df<<1))&-1;
+                                              regs[7]=(regs[7]+(self.df<<1))&-1;
                                           };
                                           break jd;
                                case 0x1ad:if(Da&(0x0010|0x0020)){
-                                              if(xa[1]){
-                                                  fa=xa[6];
-                                                  if(16==32)xa[0]=eb();
+                                              if(regs[1]){
+                                                  fa=regs[6];
+                                                  if(16==32)regs[0]=eb();
                                                   else Ob(0,cb());
-                                                  xa[6]=(fa+(wa.df<<1))&-1;
-                                                  xa[1]=(xa[1]-1)&-1;
+                                                  regs[6]=(fa+(self.df<<1))&-1;
+                                                  regs[1]=(regs[1]-1)&-1;
                                                   Eb=Gb;
                                               }
                                           }else{
-                                              fa=xa[6];
-                                              if(16==32)xa[0]=eb();
+                                              fa=regs[6];
+                                              if(16==32)regs[0]=eb();
                                               else Ob(0,cb());
-                                              xa[6]=(fa+(wa.df<<1))&-1;
+                                              regs[6]=(fa+(self.df<<1))&-1;
                                           };
                                           break jd;
                                case 0x1af:if(Da&(0x0010|0x0020)){
-                                              if(xa[1]){
-                                                  fa=xa[7];
+                                              if(regs[1]){
+                                                  fa=regs[7];
                                                   ga=cb();
-                                                  Wb(7,xa[0],ga);
-                                                  xa[7]=(xa[7]+(wa.df<<1))&-1;
-                                                  xa[1]=(xa[1]-1)&-1;
+                                                  Wb(7,regs[0],ga);
+                                                  regs[7]=(regs[7]+(self.df<<1))&-1;
+                                                  regs[1]=(regs[1]-1)&-1;
                                                   if(Da&0x0010){
                                                       if(!Tb(4))break jd;
                                                   }else{
@@ -6117,26 +6120,26 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                   }Eb=Gb;
                                               }
                                           }else{
-                                              fa=xa[7];
+                                              fa=regs[7];
                                               ga=cb();
-                                              Wb(7,xa[0],ga);
-                                              xa[7]=(xa[7]+(wa.df<<1))&-1;
+                                              Wb(7,regs[0],ga);
+                                              regs[7]=(regs[7]+(self.df<<1))&-1;
                                           };
                                           break jd;
                                case 0x1ab:if(Da&(0x0010|0x0020)){
-                                              if(xa[1]){
-                                                  if(16===32&&(xa[1]>>>0)>=4&&wa.df==1&&(xa[7]&3)==0&&gd()){
+                                              if(regs[1]){
+                                                  if(16===32&&(regs[1]>>>0)>=4&&self.df==1&&(regs[7]&3)==0&&gd()){
                                                   }else{
-                                                      fa=xa[7];
-                                                      ob(xa[0]);
-                                                      xa[7]=(fa+(wa.df<<1))&-1;
-                                                      xa[1]=(xa[1]-1)&-1;
+                                                      fa=regs[7];
+                                                      ob(regs[0]);
+                                                      regs[7]=(fa+(self.df<<1))&-1;
+                                                      regs[1]=(regs[1]-1)&-1;
                                                   }Eb=Gb;
                                               }
                                           }else{
-                                              fa=xa[7];
-                                              ob(xa[0]);
-                                              xa[7]=(fa+(wa.df<<1))&-1;
+                                              fa=regs[7];
+                                              ob(regs[0]);
+                                              regs[7]=(fa+(self.df<<1))&-1;
                                           };
                                           break jd;
                                case 0x1d8:
@@ -6148,36 +6151,36 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                case 0x1de:
                                case 0x1df:b&=0xff;
                                           break;
-                               case 0x1e5:ye=(wa.eflags>>12)&3;
-                                          if(wa.cpl>ye)rc(13);
+                               case 0x1e5:ye=(self.eflags>>12)&3;
+                                          if(self.cpl>ye)rc(13);
                                           ga=phys_mem8[Eb++];
                                           ;
-                                          Ob(0,wa.ld16_port(ga));
+                                          Ob(0,self.ld16_port(ga));
                                           {
-                                              if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                              if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                                           };
                                           break jd;
-                               case 0x1e7:ye=(wa.eflags>>12)&3;
-                                          if(wa.cpl>ye)rc(13);
+                               case 0x1e7:ye=(self.eflags>>12)&3;
+                                          if(self.cpl>ye)rc(13);
                                           ga=phys_mem8[Eb++];
                                           ;
-                                          wa.st16_port(ga,xa[0]&0xffff);
+                                          self.st16_port(ga,regs[0]&0xffff);
                                           {
-                                              if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                              if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                                           };
                                           break jd;
-                               case 0x1ed:ye=(wa.eflags>>12)&3;
-                                          if(wa.cpl>ye)rc(13);
-                                          Ob(0,wa.ld16_port(xa[2]&0xffff));
+                               case 0x1ed:ye=(self.eflags>>12)&3;
+                                          if(self.cpl>ye)rc(13);
+                                          Ob(0,self.ld16_port(regs[2]&0xffff));
                                           {
-                                              if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                              if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                                           };
                                           break jd;
-                               case 0x1ef:ye=(wa.eflags>>12)&3;
-                                          if(wa.cpl>ye)rc(13);
-                                          wa.st16_port(xa[2]&0xffff,xa[0]&0xffff);
+                               case 0x1ef:ye=(self.eflags>>12)&3;
+                                          if(self.cpl>ye)rc(13);
+                                          self.st16_port(regs[2]&0xffff,regs[0]&0xffff);
                                           {
-                                              if(wa.hard_irq!=0&&(wa.eflags&0x00000200))break Re;
+                                              if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                                           };
                                           break jd;
                                case 0x162:Qe();
@@ -6360,7 +6363,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                               case 0x14f:Ea=phys_mem8[Eb++];
                                                          ;
                                                          if((Ea>>6)==3){
-                                                             ga=xa[Ea&7];
+                                                             ga=regs[Ea&7];
                                                          }else{
                                                              fa=Ib(Ea);
                                                              ga=cb();
@@ -6371,7 +6374,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                          Ga=(Ea>>3)&7;
                                                          if((Ea>>6)==3){
                                                              Fa=Ea&7;
-                                                             ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
+                                                             ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                                                          }else{
                                                              fa=Ib(Ea);
                                                              ga=ab();
@@ -6382,7 +6385,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                          Ga=(Ea>>3)&7;
                                                          if((Ea>>6)==3){
                                                              Fa=Ea&7;
-                                                             ga=((xa[Fa&3]>>((Fa&4)<<1))&0xff);
+                                                             ga=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                                                          }else{
                                                              fa=Ib(Ea);
                                                              ga=ab();
@@ -6392,25 +6395,25 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                          ;
                                                          Ga=(Ea>>3)&7;
                                                          if((Ea>>6)==3){
-                                                             Ha=xa[Ea&7];
+                                                             Ha=regs[Ea&7];
                                                          }else{
                                                              fa=Ib(Ea);
                                                              Ha=cb();
-                                                         }Ob(Ga,Fc(xa[Ga],Ha));
+                                                         }Ob(Ga,Fc(regs[Ga],Ha));
                                                          break jd;
                                               case 0x1c1:Ea=phys_mem8[Eb++];
                                                          ;
                                                          Ga=(Ea>>3)&7;
                                                          if((Ea>>6)==3){
                                                              Fa=Ea&7;
-                                                             ga=xa[Fa];
-                                                             Ha=Wb(0,ga,xa[Ga]);
+                                                             ga=regs[Fa];
+                                                             Ha=Wb(0,ga,regs[Ga]);
                                                              Ob(Ga,ga);
                                                              Ob(Fa,Ha);
                                                          }else{
                                                              fa=Ib(Ea);
                                                              ga=ib();
-                                                             Ha=Wb(0,ga,xa[Ga]);
+                                                             Ha=Wb(0,ga,regs[Ga]);
                                                              ob(Ha);
                                                              Ob(Ga,ga);
                                                          }
@@ -6598,7 +6601,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     this.cycle_count+=(cycle_count-cycle_executed);
     this.eip=(Db+Eb-Gb);
     this.cc_src=ya;
-    this.cc_dst=za;
+    this.cc_dst=cc_dst;
     this.cc_op=Aa;
     this.cc_op2=Ba;
     this.cc_dst2=Ca;
