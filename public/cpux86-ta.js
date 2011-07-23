@@ -190,10 +190,10 @@ CPU_X86.prototype.dump=function(){
     console.log(na);
 };
 
-CPU_X86.prototype.exec_internal=function(ua,va){
+CPU_X86.prototype.exec_internal=function(cycle_count,va){
     var wa,fa,xa;
     var ya,za,Aa,Ba,Ca;
-    var Da,Ea,Fa,b,Ga,ga,Ha,Ia,Ja,Ka,La,Ma;
+    var Da,Ea,Fa,b,Ga,ga,Ha,Ia,Ja,cycle_executed,La,Ma;
     var Na,Oa;
     var Pa,Qa;
     var Ra,Sa,Ta,Ua,Va,Wa;
@@ -1571,8 +1571,8 @@ CPU_X86.prototype.exec_internal=function(ua,va){
         wa.df=1-(2*((Qc>>10)&1));
         wa.eflags=(wa.eflags&~Sc)|(Qc&Sc);
     }
-    function Tc(){
-        return wa.cycle_count+(ua-Ka);
+    function get_cycle_count(){
+        return wa.cycle_count+(cycle_count-cycle_executed);
     }
     function Uc(na){
         throw"CPU abort: "+na;
@@ -1587,7 +1587,7 @@ CPU_X86.prototype.exec_internal=function(ua,va){
         wa.dump();
     }
     function Wc(intno,error_code){
-        wa.cycle_count+=(ua-Ka);
+        wa.cycle_count+=(cycle_count-cycle_executed);
         wa.eip=Db;
         wa.cc_src=ya;
         wa.cc_dst=za;
@@ -3222,7 +3222,7 @@ CPU_X86.prototype.exec_internal=function(ua,va){
     Ca=this.cc_dst2;
     Db=this.eip;
     La=256;
-    Ka=ua;
+    cycle_executed=cycle_count;
     if(va){
         ;
         Od(va.intno,0,va.error_code,0,0);
@@ -5351,7 +5351,7 @@ CPU_X86.prototype.exec_internal=function(ua,va){
                                            }xa[Ga]=Kc(xa[Ga],Ha);
                                            break jd;
                                  case 0x31:if((wa.cr4&(1<<2))&&wa.cpl!=0)rc(13);
-                                               ga=Tc();
+                                               ga=get_cycle_count();
                                            xa[0]=ga>>>0;
                                            xa[2]=(ga/0x100000000)>>>0;
                                            break jd;
@@ -6583,8 +6583,8 @@ CPU_X86.prototype.exec_internal=function(ua,va){
                            }
                }
            }
-       }while(--Ka);
-    this.cycle_count+=(ua-Ka);
+       }while(--cycle_executed);
+    this.cycle_count+=(cycle_count-cycle_executed);
     this.eip=(Db+Eb-Gb);
     this.cc_src=ya;
     this.cc_dst=za;
@@ -6594,13 +6594,13 @@ CPU_X86.prototype.exec_internal=function(ua,va){
     return La;
 };
 CPU_X86.prototype.exec=function(cnt){
-    var Ue,ret,Ve,va;
-    Ve=this.cycle_count+cnt;
+    var Ue,ret,next_round,va;
+    next_round=this.cycle_count+cnt;
     ret=256;
     va=null;
-    while(this.cycle_count<Ve){
+    while(this.cycle_count<next_round){
         try{
-            ret=this.exec_internal(Ve-this.cycle_count,va);
+            ret=this.exec_internal(cnt,va);
             if(ret!=256)break;
             va=null;
         }
@@ -7302,32 +7302,32 @@ PCEmulator.prototype.start=function(){
     setTimeout(this.timer_func.bind(this),10);
 };
 PCEmulator.prototype.timer_func=function(){
-    var ret,Qf,cycle_count_next_round,Sf,Tf,self,cpu;
+    var ret,cycle_count_next_round,error,idle_cycle,self,cpu;
     self=this;
     cpu=self.cpu;
     var cycle_count_per_round = 1000000;
     cycle_count_next_round=cpu.cycle_count+cycle_count_per_round;
-    Sf=false;
-    Tf=false;
+    error=false;
+    idle_cycle=false;
     Uf:while(cpu.cycle_count < cycle_count_next_round){
         //self.log('cycle_count:'+cpu.cycle_count);
            self.pit.update_irq();
            ret=cpu.exec(cycle_count_per_round);
            if(ret==256){
                if(self.reset_request){
-                   Sf=true;
+                   error=true;
                    break;
                }
            }else if(ret==257){
-               Tf=true;
+               idle_cycle=true;
                break;
            }else{
-               Sf=true;
+               error=true;
                break;
            }
        }
-       if(!Sf){
-           if(Tf){
+       if(!error){
+           if(idle_cycle){
                setTimeout(this.timer_func.bind(this),10);
            }else{
                setTimeout(this.timer_func.bind(this),0);
