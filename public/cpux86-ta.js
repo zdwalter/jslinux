@@ -6853,7 +6853,7 @@ hf.prototype.ioport_read=function(pf){
     }
     return gf;
 };
-function qf(ef,rf,pf,sf){
+function pic(ef,rf,pf,sf){
     this.pics=new Array();
     this.pics[0]=new hf(ef,rf);
     this.pics[1]=new hf(ef,pf);
@@ -6864,24 +6864,25 @@ function qf(ef,rf,pf,sf){
     this.pics[0].update_irq=this.update_irq.bind(this);
     this.pics[1].update_irq=this.update_irq.bind(this);
 }
-qf.prototype.update_irq=function(){
+pic.prototype.update_irq=function(){
     var tf,kf;
     tf=this.pics[1].get_irq();
     if(tf>=0){
         this.pics[0].set_irq1(2,1);
         this.pics[0].set_irq1(2,0);
-    }kf=this.pics[0].get_irq();
+    }
+    kf=this.pics[0].get_irq();
     if(kf>=0){
         this.cpu_set_irq(1);
     }else{
         this.cpu_set_irq(0);
     }
 };
-qf.prototype.set_irq=function(kf,lf){
+pic.prototype.set_irq=function(kf,lf){
     this.pics[kf>>3].set_irq1(kf&7,lf);
     this.update_irq();
 };
-qf.prototype.get_hard_intno=function(){
+pic.prototype.get_hard_intno=function(){
     var kf,tf,intno;
     kf=this.pics[0].get_irq();
     if(kf>=0){
@@ -6903,7 +6904,7 @@ qf.prototype.get_hard_intno=function(){
     }this.update_irq();
     return intno;
 };
-function uf(ef,vf,wf){
+function pit(ef,vf,wf){
     var s,i;
     this.pit_channels=new Array();
     for(i=0;
@@ -7000,7 +7001,7 @@ xf.prototype.pit_load_count=function(ga){
     this.count_load_time=this.get_time();
     this.count=ga;
 };
-uf.prototype.ioport_write=function(fa,ga){
+pit.prototype.ioport_write=function(fa,ga){
     var Cf,Df,s;
     fa&=3;
     if(fa==3){
@@ -7034,7 +7035,7 @@ uf.prototype.ioport_write=function(fa,ga){
         }
     }
 };
-uf.prototype.ioport_read=function(fa){
+pit.prototype.ioport_read=function(fa){
     var gf,ma,s;
     fa&=3;
     s=this.pit_channels[fa];
@@ -7056,18 +7057,18 @@ uf.prototype.ioport_read=function(fa){
     }
     return gf;
 };
-uf.prototype.speaker_ioport_write=function(fa,ga){
+pit.prototype.speaker_ioport_write=function(fa,ga){
     this.speaker_data_on=(ga>>1)&1;
     this.pit_channels[2].gate=ga&1;
 };
-uf.prototype.speaker_ioport_read=function(fa){
+pit.prototype.speaker_ioport_read=function(fa){
     var zf,s,ga;
     s=this.pit_channels[2];
     zf=s.pit_get_out();
     ga=(this.speaker_data_on<<1)|s.gate|(zf<<5);
     return ga;
 };
-uf.prototype.update_irq=function(){
+pit.prototype.update_irq=function(){
     this.set_irq(1);
     this.set_irq(0);
 };
@@ -7266,28 +7267,31 @@ function Of(){
     return this.cycle_count;
 }
 function PCEmulator(Pf){
-    var wa;
-    wa=new CPU_X86();
-    this.cpu=wa;
-    wa.phys_mem_resize(Pf.mem_size);
+    var cpu;
+    cpu=new CPU_X86();
+    this.cpu=cpu;
+    cpu.phys_mem_resize(Pf.mem_size);
     this.init_ioports();
     this.register_ioport_write(0x80,1,1,this.ioport80_write);
-    this.pic=new qf(this,0x20,0xa0,sf.bind(wa));
-    this.pit=new uf(this,this.pic.set_irq.bind(this.pic,0),Of.bind(wa));
+    this.pic=new pic(this,0x20,0xa0,sf.bind(cpu));
+    this.pit=new pit(this,this.pic.set_irq.bind(this.pic,0),Of.bind(cpu));
     this.cmos=new df(this);
     this.serial=new Ef(this,0x3f8,this.pic.set_irq.bind(this.pic,4),Pf.serial_write);
     this.kbd=new Jf(this,this.reset.bind(this));
     this.reset_request=0;
     if(Pf.clipboard_get&&Pf.clipboard_set){
         this.jsclipboard=new Lf(this,0x3c0,Pf.clipboard_get,Pf.clipboard_set,Pf.get_boot_time);
-    }wa.ld8_port=this.ld8_port.bind(this);
-    wa.ld16_port=this.ld16_port.bind(this);
-    wa.ld32_port=this.ld32_port.bind(this);
-    wa.st8_port=this.st8_port.bind(this);
-    wa.st16_port=this.st16_port.bind(this);
-    wa.st32_port=this.st32_port.bind(this);
-    wa.get_hard_intno=this.pic.get_hard_intno.bind(this.pic);
+    }cpu.ld8_port=this.ld8_port.bind(this);
+    cpu.ld16_port=this.ld16_port.bind(this);
+    cpu.ld32_port=this.ld32_port.bind(this);
+    cpu.st8_port=this.st8_port.bind(this);
+    cpu.st16_port=this.st16_port.bind(this);
+    cpu.st32_port=this.st32_port.bind(this);
+    cpu.get_hard_intno=this.pic.get_hard_intno.bind(this.pic);
 }
+PCEmulator.prototype.log=function(msg) {
+    console.log(msg);
+};
 PCEmulator.prototype.load_binary=function(Xe,ha){
     return this.cpu.load_binary(Xe,ha);
 };
@@ -7295,17 +7299,19 @@ PCEmulator.prototype.start=function(){
     setTimeout(this.timer_func.bind(this),10);
 };
 PCEmulator.prototype.timer_func=function(){
-    var La,Qf,Rf,Sf,Tf,ef,cpu;
-    ef=this;
-    cpu=ef.cpu;
-    Rf=cpu.cycle_count+100000;
+    var La,Qf,Rf,Sf,Tf,self,cpu;
+    self=this;
+    cpu=self.cpu;
+    var cycle_count_per_round = 1000000;
+    Rf=cpu.cycle_count+cycle_count_per_round;
     Sf=false;
     Tf=false;
     Uf:while(cpu.cycle_count<Rf){
-           ef.pit.update_irq();
-           La=cpu.exec(Rf-cpu.cycle_count);
+        //self.log('cycle_count:'+cpu.cycle_count);
+           self.pit.update_irq();
+           La=cpu.exec(cycle_count_per_round);
            if(La==256){
-               if(ef.reset_request){
+               if(self.reset_request){
                    Sf=true;
                    break;
                }
