@@ -154,7 +154,7 @@ function oa(ga,n){
     }
     return s;
 }
-function pa(n){
+function str_to_hex(n){
     return oa(n,8);
 }
 function qa(n){
@@ -166,16 +166,16 @@ function ra(n){
 CPU_X86.prototype.dump=function(){
     var i,sa,na;
     var ta=[" ES"," CS"," SS"," DS"," FS"," GS","LDT"," TR"];
-    console.log("TSC="+pa(this.cycle_count)+" EIP="+pa(this.eip)+"\nEAX="+pa(this.regs[0])+" ECX="+pa(this.regs[1])+" EDX="+pa(this.regs[2])+" EBX="+pa(this.regs[3])+" ESP="+pa(this.regs[4])+" EBP="+pa(this.regs[5]));
-    console.log("ESI="+pa(this.regs[6])+" EDI="+pa(this.regs[7]));
-    console.log("EFL="+pa(this.eflags)+" OP="+qa(this.cc_op)+" SRC="+pa(this.cc_src)+" DST="+pa(this.cc_dst)+" OP2="+qa(this.cc_op2)+" DST2="+pa(this.cc_dst2));
-    console.log("CPL="+this.cpl+" CR0="+pa(this.cr0)+" CR2="+pa(this.cr2)+" CR3="+pa(this.cr3)+" CR4="+pa(this.cr4));
+    console.log("TSC="+str_to_hex(this.cycle_count)+" EIP="+str_to_hex(this.eip)+"\nEAX="+str_to_hex(this.regs[0])+" ECX="+str_to_hex(this.regs[1])+" EDX="+str_to_hex(this.regs[2])+" EBX="+str_to_hex(this.regs[3])+" ESP="+str_to_hex(this.regs[4])+" EBP="+str_to_hex(this.regs[5]));
+    console.log("ESI="+str_to_hex(this.regs[6])+" EDI="+str_to_hex(this.regs[7]));
+    console.log("EFL="+str_to_hex(this.eflags)+" OP="+qa(this.cc_op)+" SRC="+str_to_hex(this.cc_src)+" DST="+str_to_hex(this.cc_dst)+" OP2="+qa(this.cc_op2)+" DST2="+str_to_hex(this.cc_dst2));
+    console.log("CPL="+this.cpl+" CR0="+str_to_hex(this.cr0)+" CR2="+str_to_hex(this.cr2)+" CR3="+str_to_hex(this.cr3)+" CR4="+str_to_hex(this.cr4));
     na="";
     for(i=0; i<8; i++){
         if(i==6) sa=this.ldt;
         else if(i==7) sa=this.tr;
         else sa=this.segs[i];
-        na+=ta[i]+"="+ra(sa.selector)+" "+pa(sa.base)+" "+pa(sa.limit)+" "+ra((sa.flags>>8)&0xf0ff);
+        na+=ta[i]+"="+ra(sa.selector)+" "+str_to_hex(sa.base)+" "+str_to_hex(sa.limit)+" "+ra((sa.flags>>8)&0xf0ff);
         if(i&1){
             console.log(na);
             na="";
@@ -184,16 +184,16 @@ CPU_X86.prototype.dump=function(){
         }
     }
     sa=this.gdt;
-    na="GDT=     "+pa(sa.base)+" "+pa(sa.limit)+"      ";
+    na="GDT=     "+str_to_hex(sa.base)+" "+str_to_hex(sa.limit)+"      ";
     sa=this.idt;
-    na+="IDT=     "+pa(sa.base)+" "+pa(sa.limit);
+    na+="IDT=     "+str_to_hex(sa.base)+" "+str_to_hex(sa.limit);
     console.log(na);
 };
 
 CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     var self,fa,regs;
     var cc_src,cc_dst,cc_op,cc_op2,cc_dst2;
-    var Da,Ea,Fa,b,Ga,ga,Ha,Ia,Ja,cycle_executed,ret,Ma;
+    var Da,Ea,Fa,opcode, Ga,ga,Ha,Ia,Ja,cycle_executed,ret,Ma;
     var phys_mem8,Oa;
     var phys_mem16,phys_mem32;
     var tlb_read_kernel,tlb_write_kernel,tlb_read_user,tlb_write_user,tlb_read,tlb_write;
@@ -2664,16 +2664,16 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         }Md=ub();
         return[Md,Nd];
     }
-    function Od(intno,Pd,error_code,Qd,Rd){
+    function do_interrupt(intno,Pd,error_code,Qd,Rd){
         var sa,Sd,Kd,Jd,selector,Td,Ud;
         var Vd,Wd,Ld;
         var e,Cd,Ad,Xd,Md,Nd,Yd,Zd;
         var ae,be;
         if(intno==0x06){
             var ce=eip;
-            na="do_interrupt: intno="+qa(intno)+" error_code="+pa(error_code)+" EIP="+pa(ce)+" ESP="+pa(regs[4])+" EAX="+pa(regs[0])+" EBX="+pa(regs[3])+" ECX="+pa(regs[1]);
+            na="do_interrupt: intno="+qa(intno)+" error_code="+str_to_hex(error_code)+" EIP="+str_to_hex(ce)+" ESP="+str_to_hex(regs[4])+" EAX="+str_to_hex(regs[0])+" EBX="+str_to_hex(regs[3])+" ECX="+str_to_hex(regs[1]);
             if(intno==0x0e){
-                na+=" CR2="+pa(self.cr2);
+                na+=" CR2="+str_to_hex(self.cr2);
             }
             console.log(na);
             if(intno==0x06){
@@ -3238,21 +3238,20 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     ret=256;
     cycle_executed=cycle_count;
     if(interrupt){
-        Od(interrupt.intno,0,interrupt.error_code,0,0);
+        do_interrupt(interrupt.intno,0,interrupt.error_code,0,0);
     }
     if(self.hard_intno>=0){
-        ;
-        Od(self.hard_intno,0,0,0,1);
+        do_interrupt(self.hard_intno,0,0,0,1);
         self.hard_intno=-1;
-    }if(self.hard_irq!=0&&(self.eflags&0x00000200)){
+    }
+    if(self.hard_irq!=0&&(self.eflags&0x00000200)){
         self.hard_intno=self.get_hard_intno();
-        ;
-        Od(self.hard_intno,0,0,0,1);
+        do_interrupt(self.hard_intno,0,0,0,1);
         self.hard_intno=-1;
-    }Eb=0;
+    }
+    Eb=0;
     Gb=0;
     Re:do{
-           ;
            Da=0;
            eip=(eip+Eb-Gb)>>0;
            Fb=tlb_read[eip>>>12];
@@ -3261,70 +3260,61 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                if(Fb==-1)Za(eip,0,self.cpl==3);
                Fb=tlb_read[eip>>>12];
                Gb=Eb=eip^Fb;
-               b=phys_mem8[Eb++];
-               ;
+               opcode=phys_mem8[Eb++];
                Se=eip&0xfff;
                if(Se>=(4096-15+1)){
                    ga=hd(eip,b);
                    if((Se+ga)>4096){
                        Gb=Eb=this.mem_size;
-                       for(Ha=0;
-                               Ha<ga;
-                               Ha++){
+                       for(Ha=0; Ha<ga; Ha++){
                            fa=(eip+Ha)>>0;
                            phys_mem8[Eb+Ha]=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
-                       }Eb++;
+                       }
+                       Eb++;
                    }
                }
            }else{
                Gb=Eb=eip^Fb;
-               b=phys_mem8[Eb++];
-               ;
+               opcode=phys_mem8[Eb++];
            }
            if(0){
-               console.log("exec: EIP="+pa(eip)+" OPCODE="+pa(b));
+               console.log("exec: EIP="+str_to_hex(eip)+" OPCODE="+str_to_hex(opcode);
            }
-           jd:for(;
-                   ;
-                  ){
+           jd:for(; ;){
                switch(b){
-                   case 0x66:if(Da==0)hd(eip,b);
-                                 Da|=0x0100;
-                             b=phys_mem8[Eb++];
-                             ;
-                             b|=(Da&0x0100);
-                             break;
-                   case 0xf0:if(Da==0)hd(eip,b);
-                                 Da|=0x0040;
-                             b=phys_mem8[Eb++];
-                             ;
-                             b|=(Da&0x0100);
-                             break;
+                   case 0x66:
+                       if(Da==0)
+                           hd(eip,b);
+                       Da|=0x0100;
+                       b=phys_mem8[Eb++];
+                       b|=(Da&0x0100);
+                       break;
+                   case 0xf0:
+                       if(Da==0)
+                           hd(eip,b);
+                       Da|=0x0040;
+                       b=phys_mem8[Eb++];
+                       b|=(Da&0x0100);
+                       break;
                    case 0xf2:if(Da==0)hd(eip,b);
                                  Da|=0x0020;
                              b=phys_mem8[Eb++];
-                             ;
                              b|=(Da&0x0100);
                              break;
                    case 0xf3:if(Da==0)hd(eip,b);
                                  Da|=0x0010;
                              b=phys_mem8[Eb++];
-                             ;
                              b|=(Da&0x0100);
                              break;
                    case 0x64:if(Da==0)hd(eip,b);
                                  Da=(Da&~0x000f)|(4+1);
                              b=phys_mem8[Eb++];
-                             ;
                              b|=(Da&0x0100);
-                             ;
                              break;
                    case 0x65:if(Da==0)hd(eip,b);
                                  Da=(Da&~0x000f)|(5+1);
                              b=phys_mem8[Eb++];
-                             ;
                              b|=(Da&0x0100);
-                             ;
                              break;
                    case 0xb0:
                    case 0xb1:
@@ -3334,7 +3324,6 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xb5:
                    case 0xb6:
                    case 0xb7:ga=phys_mem8[Eb++];
-                             ;
                              b&=7;
                              Oa=(b&4)<<1;
                              regs[b&3]=(regs[b&3]&~(0xff<<Oa))|(((ga)&0xff)<<Oa);
@@ -3670,8 +3659,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x24:
                    case 0x2c:
                    case 0x34:
-                   case 0x3c:Ha=phys_mem8[Eb++];
-                             ;
+                   case 0x3c:
+                             Ha=phys_mem8[Eb++];
                              Ja=b>>3;
                              Nb(0,Pb(Ja,regs[0]&0xff,Ha));
                              break jd;
@@ -4524,16 +4513,16 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              break jd;
                    case 0x90:break jd;
                    case 0xcc:Ha=(eip+Eb-Gb);
-                             Od(3,1,0,Ha,0);
+                             do_interrupt(3,1,0,Ha,0);
                              break jd;
                    case 0xcd:ga=phys_mem8[Eb++];
                              ;
                              Ha=(eip+Eb-Gb);
-                             Od(ga,1,0,Ha,0);
+                             do_interrupt(ga,1,0,Ha,0);
                              break jd;
                    case 0xce:if(Tb(0)){
                                  Ha=(eip+Eb-Gb);
-                                 Od(4,1,0,Ha,0);
+                                 do_interrupt(4,1,0,Ha,0);
                              }
                              break jd;
                    case 0x62:Pe();
