@@ -2318,7 +2318,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                          case 0xaf:
                                          case 0xc0:
                                          case 0xc1:
-                                         case 0xb1:{
+                                         case 0xb1:
+                                                   {
                                                        {
                                                            if((n+1)>15)rc(6);
                                                            fa=(eip+(n++))>>0;
@@ -3279,7 +3280,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
            //if(debug--){
            //    console.log("exec: EIP="+str_to_hex(eip)+" OPCODE="+str_to_hex(opcode));
            //}
-           //else throw 257;
+           //else throw 'debug halt';
            jd:for(; ;){
                switch(opcode){
                    case 0x66:
@@ -3325,23 +3326,22 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xb4:
                    case 0xb5:
                    case 0xb6:
-                   case 0xb7:ga=phys_mem8[offset++];
+                   case 0xb7:
+                             ga=phys_mem8[offset++];
                              opcode&=7;
                              Oa=(opcode&4)<<1;
                              regs[opcode&3]=(regs[opcode&3]&~(0xff<<Oa))|(((ga)&0xff)<<Oa);
                              break jd;
-                   case 0xb8:
+                   case 0xb8: //    MOV phys_mem to regs
                    case 0xb9:
                    case 0xba:
                    case 0xbb:
-                   case 0xbc:
+                   case 0xbc: 
                    case 0xbd:
                    case 0xbe:
                    case 0xbf:
-                             {
-                                 ga=phys_mem8[offset]|(phys_mem8[offset+1]<<8)|(phys_mem8[offset+2]<<16)|(phys_mem8[offset+3]<<24);
-                                 offset+=4;
-                             };
+                             ga=phys_mem8[offset]|(phys_mem8[offset+1]<<8)|(phys_mem8[offset+2]<<16)|(phys_mem8[offset+3]<<24);
+                             offset+=4;
                              regs[opcode&7]=ga;
                              break jd;
                    case 0x88:Ea=phys_mem8[offset++];
