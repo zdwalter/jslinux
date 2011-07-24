@@ -1,11 +1,11 @@
-/* 
-   PC Emulator
-
-   Copyright (c) 2011 Fabrice Bellard
-
-   Redistribution or commercial use is prohibited without the author's
-   permission.
-   */
+///* 
+//   PC Emulator
+//
+//   Copyright (c) 2011 Fabrice Bellard
+//
+//   Redistribution or commercial use is prohibited without the author's
+//   permission.
+//   */
 "use strict";
 var aa=[1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1];
 var ba=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
@@ -45,6 +45,7 @@ function CPU_X86(){
     this.halted=0;
     this.phys_mem=null;
     da=0x100000;
+    //TLB：Translation lookaside buffer 
     this.tlb_read_kernel=new Int32Array(da);
     this.tlb_write_kernel=new Int32Array(da);
     this.tlb_read_user=new Int32Array(da);
@@ -154,7 +155,7 @@ function oa(value,n){
     }
     return s;
 }
-function str_to_hex(n){
+function int_to_hex(n){
     return oa(n,8);
 }
 function qa(n){
@@ -166,16 +167,16 @@ function ra(n){
 CPU_X86.prototype.dump=function(){
     var i,sa,na;
     var ta=[" ES"," CS"," SS"," DS"," FS"," GS","LDT"," TR"];
-    console.log("TSC="+str_to_hex(this.cycle_count)+" EIP="+str_to_hex(this.eip)+"\nEAX="+str_to_hex(this.regs[0])+" ECX="+str_to_hex(this.regs[1])+" EDX="+str_to_hex(this.regs[2])+" EBX="+str_to_hex(this.regs[3])+" ESP="+str_to_hex(this.regs[4])+" EBP="+str_to_hex(this.regs[5]));
-    console.log("ESI="+str_to_hex(this.regs[6])+" EDI="+str_to_hex(this.regs[7]));
-    console.log("EFL="+str_to_hex(this.eflags)+" OP="+qa(this.cc_op)+" SRC="+str_to_hex(this.cc_src)+" DST="+str_to_hex(this.cc_dst)+" OP2="+qa(this.cc_op2)+" DST2="+str_to_hex(this.cc_dst2));
-    console.log("CPL="+this.cpl+" CR0="+str_to_hex(this.cr0)+" CR2="+str_to_hex(this.cr2)+" CR3="+str_to_hex(this.cr3)+" CR4="+str_to_hex(this.cr4));
+    console.log("TSC="+int_to_hex(this.cycle_count)+" EIP="+int_to_hex(this.eip)+"\nEAX="+int_to_hex(this.regs[0])+" ECX="+int_to_hex(this.regs[1])+" EDX="+int_to_hex(this.regs[2])+" EBX="+int_to_hex(this.regs[3])+" ESP="+int_to_hex(this.regs[4])+" EBP="+int_to_hex(this.regs[5]));
+    console.log("ESI="+int_to_hex(this.regs[6])+" EDI="+int_to_hex(this.regs[7]));
+    console.log("EFL="+int_to_hex(this.eflags)+" OP="+qa(this.cc_op)+" SRC="+int_to_hex(this.cc_src)+" DST="+int_to_hex(this.cc_dst)+" OP2="+qa(this.cc_op2)+" DST2="+int_to_hex(this.cc_dst2));
+    console.log("CPL="+this.cpl+" CR0="+int_to_hex(this.cr0)+" CR2="+int_to_hex(this.cr2)+" CR3="+int_to_hex(this.cr3)+" CR4="+int_to_hex(this.cr4));
     na="";
     for(i=0; i<8; i++){
         if(i==6) sa=this.ldt;
         else if(i==7) sa=this.tr;
         else sa=this.segs[i];
-        na+=ta[i]+"="+ra(sa.selector)+" "+str_to_hex(sa.base)+" "+str_to_hex(sa.limit)+" "+ra((sa.flags>>8)&0xf0ff);
+        na+=ta[i]+"="+ra(sa.selector)+" "+int_to_hex(sa.base)+" "+int_to_hex(sa.limit)+" "+ra((sa.flags>>8)&0xf0ff);
         if(i&1){
             console.log(na);
             na="";
@@ -184,9 +185,9 @@ CPU_X86.prototype.dump=function(){
         }
     }
     sa=this.gdt;
-    na="GDT=     "+str_to_hex(sa.base)+" "+str_to_hex(sa.limit)+"      ";
+    na="GDT=     "+int_to_hex(sa.base)+" "+int_to_hex(sa.limit)+"      ";
     sa=this.idt;
-    na+="IDT=     "+str_to_hex(sa.base)+" "+str_to_hex(sa.limit);
+    na+="IDT=     "+int_to_hex(sa.base)+" "+int_to_hex(sa.limit);
     console.log(na);
 };
 
@@ -1819,29 +1820,33 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xd5:n++;
                              if(n>15)rc(6);
                              break jd;
-                   case 0xb8:
-                   case 0xb9:
-                   case 0xba:
-                   case 0xbb:
-                   case 0xbc:
-                   case 0xbd:
-                   case 0xbe:
-                   case 0xbf:
-                   case 0x05:
-                   case 0x0d:
-                   case 0x15:
-                   case 0x1d:
-                   case 0x25:
-                   case 0x2d:
-                   case 0x35:
-                   case 0x3d:
-                   case 0xa9:
-                   case 0x68:
-                   case 0xe9:
-                   case 0xe8:if(Da&0x0100)l=2;
-                             else l=4;
+                   case 0xb8: //MOVE
+                   case 0xb9: //MOVE
+                   case 0xba: //MOVE
+                   case 0xbb: //MOVE
+                   case 0xbc: //MOVE
+                   case 0xbd: //MOVE
+                   case 0xbe: //MOVE
+                   case 0xbf: //MOVE
+                   case 0x05: //ADD EAX
+                   case 0x0d: //OR EAX
+                   case 0x15: //ADC  EAX
+                   case 0x1d: //SBB EAX
+                   case 0x25: //AND EAX
+                   case 0x2d: //SUB EAX
+                   case 0x35: //XOR EAX
+                   case 0x3d: //CMP EAX
+                   case 0xa9: //TEST EAX
+                   case 0x68: //PUSH imm16/32
+                   case 0xe9: //JMP rel16/32
+                   case 0xe8: //CALL rel16/32
+                             if(Da&0x0100)
+                                 l=2;
+                             else 
+                                 l=4;
                              n+=l;
-                             if(n>15)rc(6);
+                             if(n>15)
+                                 rc(6);
                              break jd;
                    case 0x88:
                    case 0x89:
@@ -2670,9 +2675,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         var ae,be;
         if(intno==0x06){
             var ce=eip;
-            na="do_interrupt: intno="+qa(intno)+" error_code="+str_to_hex(error_code)+" EIP="+str_to_hex(ce)+" ESP="+str_to_hex(regs[4])+" EAX="+str_to_hex(regs[0])+" EBX="+str_to_hex(regs[3])+" ECX="+str_to_hex(regs[1]);
+            na="do_interrupt: intno="+qa(intno)+" error_code="+int_to_hex(error_code)+" EIP="+int_to_hex(ce)+" ESP="+int_to_hex(regs[4])+" EAX="+int_to_hex(regs[0])+" EBX="+int_to_hex(regs[3])+" ECX="+int_to_hex(regs[1]);
             if(intno==0x0e){
-                na+=" CR2="+str_to_hex(self.cr2);
+                na+=" CR2="+int_to_hex(self.cr2);
             }
             console.log(na);
             if(intno==0x06){
@@ -3250,7 +3255,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     offset=0;
     Gb=0;
-    var debug = 1;
+    var debug = 4;
     Re:do{
            Da=0;
            eip=(eip+offset-Gb)>>0;
@@ -3278,7 +3283,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                opcode=phys_mem8[offset++];
            }
            //if(debug--){
-           //    console.log("exec: EIP="+str_to_hex(eip)+" OPCODE="+str_to_hex(opcode));
+           //    console.log("exec: EIP="+int_to_hex(eip)+" OPCODE="+int_to_hex(opcode));
            //}
            //else throw 'debug halt';
            jd:for(; ;){
@@ -4076,23 +4081,22 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              break jd;
                    case 0x99:regs[2]=regs[0]>>31;
                              break jd;
-                   case 0x50:
+                   case 0x50: // PUSH reg -> mem   
                    case 0x51:
                    case 0x52:
                    case 0x53:
                    case 0x54:
                    case 0x55:
                    case 0x56:
-                   case 0x57:value=regs[opcode&7];
+                   case 0x57:
+                             value=regs[opcode&7];
                              fa=(regs[4]-4)&-1;
-                             {
-                                 Oa=tlb_write[fa>>>12];
-                                 if((Oa|fa)&3){
-                                     pb(value);
-                                 }else{
-                                     phys_mem32[(fa^Oa)>>2]=value;
-                                 }
-                             };
+                             Oa=tlb_write[fa>>>12];
+                             if((Oa|fa)&3){
+                                 pb(value);
+                             }else{
+                                 phys_mem32[(fa^Oa)>>2]=value;
+                             }
                              regs[4]=fa;
                              break jd;
                    case 0x58:
