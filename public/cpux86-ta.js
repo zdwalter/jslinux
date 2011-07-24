@@ -291,7 +291,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             }
         };
     }
-    function nb(value){
+    function set_mem16_revert(value){
         set_mem8(value);
         fa++;
         set_mem8(value>>8);
@@ -302,13 +302,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         {
             Oa=tlb_write[fa>>>12];
             if((Oa|fa)&1){
-                nb(value);
+                set_mem16_revert(value);
             }else{
                 phys_mem16[(fa^Oa)>>1]=value;
             }
         };
     }
-    function pb(value){
+    function set_mem32_revert(value){
         set_mem8(value);
         fa++;
         set_mem8(value>>8);
@@ -323,7 +323,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         {
             Oa=tlb_write[fa>>>12];
             if((Oa|fa)&3){
-                pb(value);
+                set_mem32_revert(value);
             }else{
                 phys_mem32[(fa^Oa)>>2]=value;
             }
@@ -3283,10 +3283,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                Gb=offset=eip^Fb;
                opcode=phys_mem8[offset++];
            }
-           //if(debug--){
-           //    console.log("exec: EIP="+int_to_hex(eip)+" OPCODE="+int_to_hex(opcode));
-           //}
-           //else throw 'debug halt';
+           if(debug--){
+               console.log("exec: EIP="+int_to_hex(eip)+" OPCODE="+int_to_hex(opcode));
+           }
+           else throw 'debug halt';
            jd:for(; ;){
                switch(opcode){
                    case 0x66:
@@ -3381,7 +3381,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  {
                                      Oa=tlb_write[fa>>>12];
                                      if((Oa|fa)&3){
-                                         pb(value);
+                                         set_mem32_revert(value);
                                      }else{
                                          phys_mem32[(fa^Oa)>>2]=value;
                                      }
@@ -4095,8 +4095,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              fa=(regs[4]-4)&-1;
                              Oa=tlb_write[fa>>>12];
                              if((Oa|fa)&3){
-                          console.log('PUSH pb('+value+')');
-                                 pb(value);
+                          console.log('PUSH set_mem32_revert('+value+')');
+                                 set_mem32_revert(value);
                              }else{
                           console.log('PUSH phys_mem32['+((fa^Oa)>>2)+']='+value );
                                  phys_mem32[(fa^Oa)>>2]=value;
@@ -4124,7 +4124,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  {
                                      Oa=tlb_write[fa>>>12];
                                      if((Oa|fa)&3){
-                                         pb(value);
+                                         set_mem32_revert(value);
                                      }else{
                                          phys_mem32[(fa^Oa)>>2]=value;
                                      }
