@@ -195,7 +195,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     var self,fa,regs;
     var cc_src,cc_dst,cc_op,cc_op2,cc_dst2;
     var Da,Ea,Fa,opcode, Ga,value,Ha,Ia,Ja,cycle_executed,ret,Ma;
-    var phys_mem8,Oa;
+    var phys_mem8,endianness;
     var phys_mem16,phys_mem32;
     var tlb_read_kernel,tlb_write_kernel,tlb_read_user,tlb_write_user,tlb_read,tlb_write;
     function Xa(){
@@ -205,8 +205,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         return phys_mem8[Ya];
     }
     function ab(){
-        var Oa;
-        return(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+        var endianness;
+        return(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
     }
     function bb(){
         var value;
@@ -217,8 +217,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         return value;
     }
     function cb(){
-        var Oa;
-        return(((Oa=tlb_read[fa>>>12])|fa)&1?bb():phys_mem16[(fa^Oa)>>1]);
+        var endianness;
+        return(((endianness=tlb_read[fa>>>12])|fa)&1?bb():phys_mem16[(fa^endianness)>>1]);
     }
     function db(){
         var value;
@@ -233,8 +233,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         return value;
     }
     function eb(){
-        var Oa;
-        return(((Oa=tlb_read[fa>>>12])|fa)&3?db():phys_mem32[(fa^Oa)>>2]);
+        var endianness;
+        return(((endianness=tlb_read[fa>>>12])|fa)&3?db():phys_mem32[(fa^endianness)>>2]);
     }
     function fb(){
         var Ya;
@@ -274,22 +274,20 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         var Ya;
         return((Ya=tlb_write[fa>>>12])|fa)&3?jb():phys_mem32[(fa^Ya)>>2];
     }
-    function lb(value){
+    function set_mem8_revert(value){
         var Ya;
         Za(fa,1,self.cpl==3);
         Ya=tlb_write[fa>>>12]^fa;
         phys_mem8[Ya]=value;
     }
     function set_mem8(value){
-        var Oa;
-        {
-            Oa=tlb_write[fa>>>12];
-            if(Oa==-1){
-                lb(value);
-            }else{
-                phys_mem8[fa^Oa]=value;
-            }
-        };
+        var endianness;
+        endianness=tlb_write[fa>>>12];
+        if(endianness==-1){
+            set_mem8_revert(value);
+        }else{
+            phys_mem8[fa^endianness]=value;
+        }
     }
     function set_mem16_revert(value){
         set_mem8(value);
@@ -298,17 +296,18 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         fa--;
     }
     function set_mem16(value){
-        var Oa;
+        var endianness;
         {
-            Oa=tlb_write[fa>>>12];
-            if((Oa|fa)&1){
+            endianness=tlb_write[fa>>>12];
+            if((endianness|fa)&1){
                 set_mem16_revert(value);
             }else{
-                phys_mem16[(fa^Oa)>>1]=value;
+                phys_mem16[(fa^endianness)>>1]=value;
             }
         };
     }
     function set_mem32_revert(value){
+        //console.log('set_mem32_revert:'+value)
         set_mem8(value);
         fa++;
         set_mem8(value>>8);
@@ -319,13 +318,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         fa-=3;
     }
     function set_mem32(value){
-        var Oa;
+        var endianness;
         {
-            Oa=tlb_write[fa>>>12];
-            if((Oa|fa)&3){
+            endianness=tlb_write[fa>>>12];
+            if((endianness|fa)&3){
                 set_mem32_revert(value);
             }else{
-                phys_mem32[(fa^Oa)>>2]=value;
+                phys_mem32[(fa^endianness)>>2]=value;
             }
         };
     }
@@ -507,7 +506,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                       fa=(fa+regs[base])&-1;
                       break;
             default:throw"get_modrm";
-        }if(Da&0x000f){
+        }
+        if(Da&0x000f){
             fa=(fa+self.segs[(Da&0x000f)-1].base)&-1;
         }
         return fa;
@@ -1683,7 +1683,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        {
                            if((n+1)>15)call_intro(6);
                            fa=(eip+(n++))>>0;
-                           opcode=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                           opcode=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                        };
                        break;
                    case 0x91:
@@ -1909,17 +1909,18 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xdd:
                    case 0xde:
                    case 0xdf:
-                   case 0x62:{
+                   case 0x62:
+                   {
                                  {
                                      if((n+1)>15)call_intro(6);
                                      fa=(eip+(n++))>>0;
-                                     Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                     Ea=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
                                                    if((n+1)>15)call_intro(6);
                                                    fa=(eip+(n++))>>0;
-                                                   id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                                   id=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                                };
                                                if((id&7)==5){
                                                    n+=4;
@@ -1977,13 +1978,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  {
                                      if((n+1)>15)call_intro(6);
                                      fa=(eip+(n++))>>0;
-                                     Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                     Ea=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
                                                    if((n+1)>15)call_intro(6);
                                                    fa=(eip+(n++))>>0;
-                                                   id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                                   id=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                                };
                                                if((id&7)==5){
                                                    n+=4;
@@ -2034,13 +2035,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  {
                                      if((n+1)>15)call_intro(6);
                                      fa=(eip+(n++))>>0;
-                                     Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                     Ea=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
                                                    if((n+1)>15)call_intro(6);
                                                    fa=(eip+(n++))>>0;
-                                                   id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                                   id=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                                };
                                                if((id&7)==5){
                                                    n+=4;
@@ -2091,13 +2092,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  {
                                      if((n+1)>15)call_intro(6);
                                      fa=(eip+(n++))>>0;
-                                     Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                     Ea=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
                                                    if((n+1)>15)call_intro(6);
                                                    fa=(eip+(n++))>>0;
-                                                   id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                                   id=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                                };
                                                if((id&7)==5){
                                                    n+=4;
@@ -2149,13 +2150,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  {
                                      if((n+1)>15)call_intro(6);
                                      fa=(eip+(n++))>>0;
-                                     Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                     Ea=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
                                                    if((n+1)>15)call_intro(6);
                                                    fa=(eip+(n++))>>0;
-                                                   id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                                   id=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                                };
                                                if((id&7)==5){
                                                    n+=4;
@@ -2233,7 +2234,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x0f:{
                                  if((n+1)>15)call_intro(6);
                                  fa=(eip+(n++))>>0;
-                                 opcode=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                 opcode=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                              };
                                      switch(opcode){
                                          case 0x06:
@@ -2329,13 +2330,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                        {
                                                            if((n+1)>15)call_intro(6);
                                                            fa=(eip+(n++))>>0;
-                                                           Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                                           Ea=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                                        };
                                                        switch((Ea&7)|((Ea>>3)&0x18)){
                                                            case 0x04:{
                                                                          if((n+1)>15)call_intro(6);
                                                                          fa=(eip+(n++))>>0;
-                                                                         id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                                                         id=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                                                      };
                                                                      if((id&7)==5){
                                                                          n+=4;
@@ -2384,13 +2385,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                        {
                                                            if((n+1)>15)call_intro(6);
                                                            fa=(eip+(n++))>>0;
-                                                           Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                                           Ea=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                                        };
                                                        switch((Ea&7)|((Ea>>3)&0x18)){
                                                            case 0x04:{
                                                                          if((n+1)>15)call_intro(6);
                                                                          fa=(eip+(n++))>>0;
-                                                                         id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                                                         id=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                                                                      };
                                                                      if((id&7)==5){
                                                                          n+=4;
@@ -2596,7 +2597,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                         return;
                     }
                 }
-            }error_code|=ld<<1;
+            }
+            error_code|=ld<<1;
             if(ja)error_code|=0x04;
             self.cr2=kd;
             call_intro2(14,error_code);
@@ -3256,7 +3258,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     offset=0;
     Gb=0;
-    var debug = 4;
+    var debug = 10;
     Re:do{
            Da=0;
            eip=(eip+offset-Gb)>>0;
@@ -3274,7 +3276,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                        Gb=offset=this.mem_size;
                        for(Ha=0; Ha<value; Ha++){
                            fa=(eip+Ha)>>0;
-                           phys_mem8[offset+Ha]=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                           phys_mem8[offset+Ha]=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                        }
                        offset++;
                    }
@@ -3335,8 +3337,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xb7:
                              value=phys_mem8[offset++];
                              opcode&=7;
-                             Oa=(opcode&4)<<1;
-                             regs[opcode&3]=(regs[opcode&3]&~(0xff<<Oa))|(((value)&0xff)<<Oa);
+                             endianness=(opcode&4)<<1;
+                             regs[opcode&3]=(regs[opcode&3]&~(0xff<<endianness))|(((value)&0xff)<<endianness);
                              break jd;
                    case 0xb8: //    MOV phys_mem to regs
                    case 0xb9:
@@ -3357,35 +3359,34 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              value=((regs[Ga&3]>>((Ga&4)<<1))&0xff);
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
-                                 Oa=(Fa&4)<<1;
-                                 regs[Fa&3]=(regs[Fa&3]&~(0xff<<Oa))|(((value)&0xff)<<Oa);
+                                 endianness=(Fa&4)<<1;
+                                 regs[Fa&3]=(regs[Fa&3]&~(0xff<<endianness))|(((value)&0xff)<<endianness);
                              }else{
                                  fa=Ib(Ea);
                                  {
-                                     Oa=tlb_write[fa>>>12];
-                                     if(Oa==-1){
-                                         lb(value);
+                                     endianness=tlb_write[fa>>>12];
+                                     if(endianness==-1){
+                                         set_mem8_revert(value);
                                      }else{
-                                         phys_mem8[fa^Oa]=value;
+                                         phys_mem8[fa^endianness]=value;
                                      }
                                  };
                              }
                              break jd;
-                   case 0x89:Ea=phys_mem8[offset++];
-                             ;
+                   case 0x89: //MOV
+                    console.log('MOV');
+                             Ea=phys_mem8[offset++];
                              value=regs[(Ea>>3)&7];
                              if((Ea>>6)==3){
                                  regs[Ea&7]=value;
                              }else{
                                  fa=Ib(Ea);
-                                 {
-                                     Oa=tlb_write[fa>>>12];
-                                     if((Oa|fa)&3){
-                                         set_mem32_revert(value);
-                                     }else{
-                                         phys_mem32[(fa^Oa)>>2]=value;
-                                     }
-                                 };
+                                 endianness=tlb_write[fa>>>12];
+                                 if((endianness|fa)&3){
+                                     set_mem32_revert(value);
+                                 }else{
+                                     phys_mem32[(fa^endianness)>>2]=value;
+                                 }
                              }
                              break jd;
                    case 0x8a:Ea=phys_mem8[offset++];
@@ -3395,10 +3396,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  value=((regs[Fa&3]>>((Fa&4)<<1))&0xff);
                              }else{
                                  fa=Ib(Ea);
-                                 value=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
+                                 value=(((endianness=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^endianness]);
                              }Ga=(Ea>>3)&7;
-                             Oa=(Ga&4)<<1;
-                             regs[Ga&3]=(regs[Ga&3]&~(0xff<<Oa))|(((value)&0xff)<<Oa);
+                             endianness=(Ga&4)<<1;
+                             regs[Ga&3]=(regs[Ga&3]&~(0xff<<endianness))|(((value)&0xff)<<endianness);
                              break jd;
                    case 0x8b:Ea=phys_mem8[offset++];
                              ;
@@ -3406,7 +3407,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  value=regs[Ea&7];
                              }else{
                                  fa=Ib(Ea);
-                                 value=(((Oa=tlb_read[fa>>>12])|fa)&3?db():phys_mem32[(fa^Oa)>>2]);
+                                 value=(((endianness=tlb_read[fa>>>12])|fa)&3?db():phys_mem32[(fa^endianness)>>2]);
                              }regs[(Ea>>3)&7]=value;
                              break jd;
                    case 0xa0:fa=Mb();
@@ -3736,18 +3737,17 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  }
                              }
                              break jd;
-                   case 0x83:Ea=phys_mem8[offset++];
-                             ;
+                   case 0x83:
+                            console.log('L  OR  r/m16/32    imm8');
+                             Ea=phys_mem8[offset++];
                              Ja=(Ea>>3)&7;
                              if((Ea>>6)==3){
                                  Fa=Ea&7;
                                  Ha=((phys_mem8[offset++]<<24)>>24);
-                                 ;
                                  regs[Fa]=Zb(Ja,regs[Fa],Ha);
                              }else{
                                  fa=Ib(Ea);
                                  Ha=((phys_mem8[offset++]<<24)>>24);
-                                 ;
                                  if(Ja!=7){
                                      value=kb();
                                      value=Zb(Ja,value,Ha);
@@ -4091,15 +4091,14 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x55:
                    case 0x56:
                    case 0x57:
+                   console.log('PUSH');
                              value=regs[opcode&7];
                              fa=(regs[4]-4)&-1;
-                             Oa=tlb_write[fa>>>12];
-                             if((Oa|fa)&3){
-                          console.log('PUSH set_mem32_revert('+value+')');
+                             endianness=tlb_write[fa>>>12];
+                             if((endianness|fa)&3){
                                  set_mem32_revert(value);
                              }else{
-                          console.log('PUSH phys_mem32['+((fa^Oa)>>2)+']='+value );
-                                 phys_mem32[(fa^Oa)>>2]=value;
+                                 phys_mem32[(fa^endianness)>>2]=value;
                              }
                              regs[4]=fa;
                              break jd;
@@ -4111,7 +4110,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x5d:
                    case 0x5e:
                    case 0x5f:fa=regs[4];
-                             value=(((Oa=tlb_read[fa>>>12])|fa)&3?db():phys_mem32[(fa^Oa)>>2]);
+                             value=(((endianness=tlb_read[fa>>>12])|fa)&3?db():phys_mem32[(fa^endianness)>>2]);
                              regs[4]=(fa+4)&-1;
                              regs[opcode&7]=value;
                              break jd;
@@ -4122,11 +4121,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      Ga--){
                                  value=regs[Ga];
                                  {
-                                     Oa=tlb_write[fa>>>12];
-                                     if((Oa|fa)&3){
+                                     endianness=tlb_write[fa>>>12];
+                                     if((endianness|fa)&3){
                                          set_mem32_revert(value);
                                      }else{
-                                         phys_mem32[(fa^Oa)>>2]=value;
+                                         phys_mem32[(fa^endianness)>>2]=value;
                                      }
                                  };
                                  fa=(fa+4)&-1;
@@ -4137,7 +4136,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      Ga>=0;
                                      Ga--){
                                  if(Ga!=4){
-                                     regs[Ga]=(((Oa=tlb_read[fa>>>12])|fa)&3?db():phys_mem32[(fa^Oa)>>2]);
+                                     regs[Ga]=(((endianness=tlb_read[fa>>>12])|fa)&3?db():phys_mem32[(fa^endianness)>>2]);
                                  }fa=(fa+4)&-1;
                              }regs[4]=fa;
                              break jd;
@@ -4900,8 +4899,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xe1:
                    case 0xf1:call_intro(6);
                              break;
-                   case 0x0f:opcode=phys_mem8[offset++];
-                             ;
+                   case 0x0f: // two-byte opcodes (0F..)
+                   opcode=phys_mem8[offset++];
                              switch(opcode){
                                  case 0x80:
                                  case 0x81:
