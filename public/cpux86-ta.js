@@ -998,7 +998,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         var a,q,r;
         a=regs[0]&0xffff;
         opcode&=0xff;
-        if((a>>8)>=opcode)rc(0);
+        if((a>>8)>=opcode)call_intro(0);
         q=(a/opcode)&-1;
         r=(a%opcode);
         Ob(0,(q&0xff)|(r<<8));
@@ -1007,9 +1007,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         var a,q,r;
         a=(regs[0]<<16)>>16;
         opcode=(opcode<<24)>>24;
-        if(opcode==0)rc(0);
+        if(opcode==0)call_intro(0);
         q=(a/opcode)&-1;
-        if(((q<<24)>>24)!=q)rc(0);
+        if(((q<<24)>>24)!=q)call_intro(0);
         r=(a%opcode);
         Ob(0,(q&0xff)|(r<<8));
     }
@@ -1017,7 +1017,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         var a,q,r;
         a=(regs[2]<<16)|(regs[0]&0xffff);
         opcode&=0xffff;
-        if((a>>>16)>=opcode)rc(0);
+        if((a>>>16)>=opcode)call_intro(0);
         q=(a/opcode)&-1;
         r=(a%opcode);
         Ob(0,q);
@@ -1027,9 +1027,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         var a,q,r;
         a=(regs[2]<<16)|(regs[0]&0xffff);
         opcode=(opcode<<16)>>16;
-        if(opcode==0)rc(0);
+        if(opcode==0)call_intro(0);
         q=(a/opcode)&-1;
-        if(((q<<16)>>16)!=q)rc(0);
+        if(((q<<16)>>16)!=q)call_intro(0);
         r=(a%opcode);
         Ob(0,q);
         Ob(2,r);
@@ -1040,7 +1040,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         xc=xc>>>0;
         opcode=opcode>>>0;
         if(wc>=opcode){
-            rc(0);
+            call_intro(0);
         }if(wc>=0&&wc<=0x200000){
             a=wc*4294967296+xc;
             Ma=(a%opcode)&-1;
@@ -1076,10 +1076,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         }q=vc(wc,xc,opcode);
         Bc^=Ac;
         if(Bc){
-            if((q>>>0)>0x80000000)rc(0);
+            if((q>>>0)>0x80000000)call_intro(0);
             q=(-q)&-1;
         }else{
-            if((q>>>0)>=0x80000000)rc(0);
+            if((q>>>0)>=0x80000000)call_intro(0);
         }if(Ac){
             Ma=(-Ma)&-1;
         }
@@ -1585,7 +1585,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         self.cc_dst2=cc_dst2;
         self.dump();
     }
-    function Wc(intno,error_code){
+    function call_intro2(intno,error_code){
         self.cycle_count+=(cycle_count-cycle_executed);
         self.eip=eip;
         self.cc_src=cc_src;
@@ -1593,11 +1593,10 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         self.cc_op=cc_op;
         self.cc_op2=cc_op2;
         self.cc_dst2=cc_dst2;
-        throw{
-            intno:intno,error_code:error_code};
+        throw{ intno:intno,error_code:error_code};
     }
-    function rc(intno){
-        Wc(intno,0);
+    function call_intro(intno){
+        call_intro2(intno,0);
     }
     function Xc(Yc){
         self.cpl=Yc;
@@ -1681,7 +1680,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x64:
                    case 0x65:
                        {
-                           if((n+1)>15)rc(6);
+                           if((n+1)>15)call_intro(6);
                            fa=(eip+(n++))>>0;
                            opcode=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                        };
@@ -1818,7 +1817,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xe7:
                    case 0xd4:
                    case 0xd5:n++;
-                             if(n>15)rc(6);
+                             if(n>15)call_intro(6);
                              break jd;
                    case 0xb8: //MOVE
                    case 0xb9: //MOVE
@@ -1846,7 +1845,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  l=4;
                              n+=l;
                              if(n>15)
-                                 rc(6);
+                                 call_intro(6);// will throw
                              break jd;
                    case 0x88:
                    case 0x89:
@@ -1910,29 +1909,29 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xdf:
                    case 0x62:{
                                  {
-                                     if((n+1)>15)rc(6);
+                                     if((n+1)>15)call_intro(6);
                                      fa=(eip+(n++))>>0;
                                      Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
-                                                   if((n+1)>15)rc(6);
+                                                   if((n+1)>15)call_intro(6);
                                                    fa=(eip+(n++))>>0;
                                                    id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                };
                                                if((id&7)==5){
                                                    n+=4;
-                                                   if(n>15)rc(6);
+                                                   if(n>15)call_intro(6);
                                                }
                                                break;
                                      case 0x0c:n+=2;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x14:n+=5;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x05:n+=4;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x00:
                                      case 0x01:
@@ -1947,7 +1946,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      case 0x0d:
                                      case 0x0e:
                                      case 0x0f:n++;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x10:
                                      case 0x11:
@@ -1956,7 +1955,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      case 0x15:
                                      case 0x16:
                                      case 0x17:n+=4;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                  }
                              };
@@ -1965,7 +1964,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xa1:
                    case 0xa2:
                    case 0xa3:n+=4;
-                             if(n>15)rc(6);
+                             if(n>15)call_intro(6);
                              break jd;
                    case 0xc6:
                    case 0x80:
@@ -1974,29 +1973,29 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xc0:
                    case 0xc1:{
                                  {
-                                     if((n+1)>15)rc(6);
+                                     if((n+1)>15)call_intro(6);
                                      fa=(eip+(n++))>>0;
                                      Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
-                                                   if((n+1)>15)rc(6);
+                                                   if((n+1)>15)call_intro(6);
                                                    fa=(eip+(n++))>>0;
                                                    id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                };
                                                if((id&7)==5){
                                                    n+=4;
-                                                   if(n>15)rc(6);
+                                                   if(n>15)call_intro(6);
                                                }
                                                break;
                                      case 0x0c:n+=2;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x14:n+=5;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x05:n+=4;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x00:
                                      case 0x01:
@@ -2011,7 +2010,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      case 0x0d:
                                      case 0x0e:
                                      case 0x0f:n++;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x10:
                                      case 0x11:
@@ -2020,40 +2019,40 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      case 0x15:
                                      case 0x16:
                                      case 0x17:n+=4;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                  }
                              };
                              n++;
-                             if(n>15)rc(6);
+                             if(n>15)call_intro(6);
                              break jd;
                    case 0xc7:
                    case 0x81:
                    case 0x69:{
                                  {
-                                     if((n+1)>15)rc(6);
+                                     if((n+1)>15)call_intro(6);
                                      fa=(eip+(n++))>>0;
                                      Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
-                                                   if((n+1)>15)rc(6);
+                                                   if((n+1)>15)call_intro(6);
                                                    fa=(eip+(n++))>>0;
                                                    id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                };
                                                if((id&7)==5){
                                                    n+=4;
-                                                   if(n>15)rc(6);
+                                                   if(n>15)call_intro(6);
                                                }
                                                break;
                                      case 0x0c:n+=2;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x14:n+=5;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x05:n+=4;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x00:
                                      case 0x01:
@@ -2068,7 +2067,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      case 0x0d:
                                      case 0x0e:
                                      case 0x0f:n++;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x10:
                                      case 0x11:
@@ -2077,40 +2076,40 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      case 0x15:
                                      case 0x16:
                                      case 0x17:n+=4;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                  }
                              };
                              if(Da&0x0100)l=2;
                              else l=4;
                              n+=l;
-                             if(n>15)rc(6);
+                             if(n>15)call_intro(6);
                              break jd;
                    case 0xf6:{
                                  {
-                                     if((n+1)>15)rc(6);
+                                     if((n+1)>15)call_intro(6);
                                      fa=(eip+(n++))>>0;
                                      Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
-                                                   if((n+1)>15)rc(6);
+                                                   if((n+1)>15)call_intro(6);
                                                    fa=(eip+(n++))>>0;
                                                    id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                };
                                                if((id&7)==5){
                                                    n+=4;
-                                                   if(n>15)rc(6);
+                                                   if(n>15)call_intro(6);
                                                }
                                                break;
                                      case 0x0c:n+=2;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x14:n+=5;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x05:n+=4;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x00:
                                      case 0x01:
@@ -2125,7 +2124,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      case 0x0d:
                                      case 0x0e:
                                      case 0x0f:n++;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x10:
                                      case 0x11:
@@ -2134,41 +2133,41 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      case 0x15:
                                      case 0x16:
                                      case 0x17:n+=4;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                  }
                              };
                              Ja=(Ea>>3)&7;
                              if(Ja==0){
                                  n++;
-                                 if(n>15)rc(6);
+                                 if(n>15)call_intro(6);
                              }
                              break jd;
                    case 0xf7:{
                                  {
-                                     if((n+1)>15)rc(6);
+                                     if((n+1)>15)call_intro(6);
                                      fa=(eip+(n++))>>0;
                                      Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                  };
                                  switch((Ea&7)|((Ea>>3)&0x18)){
                                      case 0x04:{
-                                                   if((n+1)>15)rc(6);
+                                                   if((n+1)>15)call_intro(6);
                                                    fa=(eip+(n++))>>0;
                                                    id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                };
                                                if((id&7)==5){
                                                    n+=4;
-                                                   if(n>15)rc(6);
+                                                   if(n>15)call_intro(6);
                                                }
                                                break;
                                      case 0x0c:n+=2;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x14:n+=5;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x05:n+=4;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x00:
                                      case 0x01:
@@ -2183,7 +2182,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      case 0x0d:
                                      case 0x0e:
                                      case 0x0f:n++;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                      case 0x10:
                                      case 0x11:
@@ -2192,7 +2191,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                      case 0x15:
                                      case 0x16:
                                      case 0x17:n+=4;
-                                               if(n>15)rc(6);
+                                               if(n>15)call_intro(6);
                                                break;
                                  }
                              };
@@ -2201,14 +2200,14 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  if(Da&0x0100)l=2;
                                  else l=4;
                                  n+=l;
-                                 if(n>15)rc(6);
+                                 if(n>15)call_intro(6);
                              }
                              break jd;
                    case 0xea:n+=6;
-                             if(n>15)rc(6);
+                             if(n>15)call_intro(6);
                              break jd;
                    case 0xc2:n+=2;
-                             if(n>15)rc(6);
+                             if(n>15)call_intro(6);
                              break jd;
                    case 0x26:
                    case 0x2e:
@@ -2228,9 +2227,9 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xd6:
                    case 0xe0:
                    case 0xe1:
-                   case 0xf1:default:rc(6);
+                   case 0xf1:default:call_intro(6);
                    case 0x0f:{
-                                 if((n+1)>15)rc(6);
+                                 if((n+1)>15)call_intro(6);
                                  fa=(eip+(n++))>>0;
                                  opcode=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                              };
@@ -2266,7 +2265,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                          case 0x8d:
                                          case 0x8e:
                                          case 0x8f:n+=4;
-                                                   if(n>15)rc(6);
+                                                   if(n>15)call_intro(6);
                                                    break jd;
                                          case 0x90:
                                          case 0x91:
@@ -2326,29 +2325,29 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                          case 0xb1:
                                                    {
                                                        {
-                                                           if((n+1)>15)rc(6);
+                                                           if((n+1)>15)call_intro(6);
                                                            fa=(eip+(n++))>>0;
                                                            Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                        };
                                                        switch((Ea&7)|((Ea>>3)&0x18)){
                                                            case 0x04:{
-                                                                         if((n+1)>15)rc(6);
+                                                                         if((n+1)>15)call_intro(6);
                                                                          fa=(eip+(n++))>>0;
                                                                          id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                                      };
                                                                      if((id&7)==5){
                                                                          n+=4;
-                                                                         if(n>15)rc(6);
+                                                                         if(n>15)call_intro(6);
                                                                      }
                                                                      break;
                                                            case 0x0c:n+=2;
-                                                                     if(n>15)rc(6);
+                                                                     if(n>15)call_intro(6);
                                                                      break;
                                                            case 0x14:n+=5;
-                                                                     if(n>15)rc(6);
+                                                                     if(n>15)call_intro(6);
                                                                      break;
                                                            case 0x05:n+=4;
-                                                                     if(n>15)rc(6);
+                                                                     if(n>15)call_intro(6);
                                                                      break;
                                                            case 0x00:
                                                            case 0x01:
@@ -2363,7 +2362,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                            case 0x0d:
                                                            case 0x0e:
                                                            case 0x0f:n++;
-                                                                     if(n>15)rc(6);
+                                                                     if(n>15)call_intro(6);
                                                                      break;
                                                            case 0x10:
                                                            case 0x11:
@@ -2372,7 +2371,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                            case 0x15:
                                                            case 0x16:
                                                            case 0x17:n+=4;
-                                                                     if(n>15)rc(6);
+                                                                     if(n>15)call_intro(6);
                                                                      break;
                                                        }
                                                    };
@@ -2381,29 +2380,29 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                          case 0xac:
                                          case 0xba:{
                                                        {
-                                                           if((n+1)>15)rc(6);
+                                                           if((n+1)>15)call_intro(6);
                                                            fa=(eip+(n++))>>0;
                                                            Ea=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                        };
                                                        switch((Ea&7)|((Ea>>3)&0x18)){
                                                            case 0x04:{
-                                                                         if((n+1)>15)rc(6);
+                                                                         if((n+1)>15)call_intro(6);
                                                                          fa=(eip+(n++))>>0;
                                                                          id=(((Oa=tlb_read[fa>>>12])==-1)?Xa():phys_mem8[fa^Oa]);
                                                                      };
                                                                      if((id&7)==5){
                                                                          n+=4;
-                                                                         if(n>15)rc(6);
+                                                                         if(n>15)call_intro(6);
                                                                      }
                                                                      break;
                                                            case 0x0c:n+=2;
-                                                                     if(n>15)rc(6);
+                                                                     if(n>15)call_intro(6);
                                                                      break;
                                                            case 0x14:n+=5;
-                                                                     if(n>15)rc(6);
+                                                                     if(n>15)call_intro(6);
                                                                      break;
                                                            case 0x05:n+=4;
-                                                                     if(n>15)rc(6);
+                                                                     if(n>15)call_intro(6);
                                                                      break;
                                                            case 0x00:
                                                            case 0x01:
@@ -2418,7 +2417,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                            case 0x0d:
                                                            case 0x0e:
                                                            case 0x0f:n++;
-                                                                     if(n>15)rc(6);
+                                                                     if(n>15)call_intro(6);
                                                                      break;
                                                            case 0x10:
                                                            case 0x11:
@@ -2427,12 +2426,12 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                            case 0x15:
                                                            case 0x16:
                                                            case 0x17:n+=4;
-                                                                     if(n>15)rc(6);
+                                                                     if(n>15)call_intro(6);
                                                                      break;
                                                        }
                                                    };
                                                    n++;
-                                                   if(n>15)rc(6);
+                                                   if(n>15)call_intro(6);
                                                    break jd;
                                          case 0x02:
                                          case 0x03:
@@ -2551,7 +2550,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                          case 0xc4:
                                          case 0xc5:
                                          case 0xc6:
-                                         case 0xc7:default:rc(6);
+                                         case 0xc7:default:call_intro(6);
                                      }
                                      break;
                }
@@ -2598,7 +2597,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             }error_code|=ld<<1;
             if(ja)error_code|=0x04;
             self.cr2=kd;
-            Wc(14,error_code);
+            call_intro2(14,error_code);
         }
     }
     function td(ud){
@@ -2657,7 +2656,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         if((Kd&7)!=1)Uc("invalid tss type");
         Ld=Kd>>3;
         Lb=(Jd*4+2)<<Ld;
-        if(Lb+(4<<Ld)-1>self.tr.limit)Wc(10,self.tr.selector&0xfffc);
+        if(Lb+(4<<Ld)-1>self.tr.limit)call_intro2(10,self.tr.selector&0xfffc);
         fa=(self.tr.base+Lb)&-1;
         if(Ld==0){
             Nd=ub();
@@ -2709,7 +2708,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         if (Pd) ae=Qd;
         else ae=eip;
         sa=self.idt;
-        if(intno*8+7>sa.limit) Wc(13,intno*8+2);
+        if(intno*8+7>sa.limit) call_intro2(13,intno*8+2);
         fa=(sa.base+intno*8)&-1;
         Cd=wb();
         fa+=4;
@@ -2724,54 +2723,54 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             case 15:
                 break;
             default:
-                Wc(13,intno*8+2);
+                call_intro2(13,intno*8+2);
                 break;
         }
         Jd=(Ad>>13)&3;
         Ud=self.cpl;
         if(Pd&&Jd<Ud)
-            Wc(13,intno*8+2);
+            call_intro2(13,intno*8+2);
         if(!(Ad&(1<<15)))
-            Wc(11,intno*8+2);
+            call_intro2(11,intno*8+2);
         selector=Cd>>16;
         Xd=(Ad&-65536)|(Cd&0x0000ffff);
         if((selector&0xfffc)==0)
-            Wc(13,0);
+            call_intro2(13,0);
         e=Bd(selector);
         if(!e)
-            Wc(13,selector&0xfffc);
+            call_intro2(13,selector&0xfffc);
         Cd=e[0];
         Ad=e[1];
-        if(!(Ad&(1<<12))||!(Ad&((1<<11))))Wc(13,selector&0xfffc);
+        if(!(Ad&(1<<12))||!(Ad&((1<<11))))call_intro2(13,selector&0xfffc);
         Jd=(Ad>>13)&3;
-        if(Jd>Ud)Wc(13,selector&0xfffc);
-        if(!(Ad&(1<<15)))Wc(11,selector&0xfffc);
+        if(Jd>Ud)call_intro2(13,selector&0xfffc);
+        if(!(Ad&(1<<15)))call_intro2(11,selector&0xfffc);
         if(!(Ad&(1<<10))&&Jd<Ud){
             e=Id(Jd);
             Md=e[0];
             Nd=e[1];
-            if((Md&0xfffc)==0)Wc(10,Md&0xfffc);
-            if((Md&3)!=Jd)Wc(10,Md&0xfffc);
+            if((Md&0xfffc)==0)call_intro2(10,Md&0xfffc);
+            if((Md&3)!=Jd)call_intro2(10,Md&0xfffc);
             e=Bd(Md);
-            if(!e)Wc(10,Md&0xfffc);
+            if(!e)call_intro2(10,Md&0xfffc);
             Yd=e[0];
             Zd=e[1];
             Td=(Zd>>13)&3;
-            if(Td!=Jd)Wc(10,Md&0xfffc);
-            if(!(Zd&(1<<12))||(Zd&(1<<11))||!(Zd&(1<<9)))Wc(10,Md&0xfffc);
-            if(!(Zd&(1<<15)))Wc(10,Md&0xfffc);
+            if(Td!=Jd)call_intro2(10,Md&0xfffc);
+            if(!(Zd&(1<<12))||(Zd&(1<<11))||!(Zd&(1<<9)))call_intro2(10,Md&0xfffc);
+            if(!(Zd&(1<<15)))call_intro2(10,Md&0xfffc);
             Wd=1;
             be=zd(Zd);
             Sd=Ed(Yd,Zd);
         }else if((Ad&(1<<10))||Jd==Ud){
-            if(self.eflags&0x00020000)Wc(13,selector&0xfffc);
+            if(self.eflags&0x00020000)call_intro2(13,selector&0xfffc);
             Wd=0;
             be=zd(self.segs[2].flags);
             Sd=self.segs[2].base;
             Nd=regs[4];
             Jd=Ud;
         }else{
-            Wc(13,selector&0xfffc);
+            call_intro2(13,selector&0xfffc);
             Wd=0;
             be=0;
             Sd=0;
@@ -2854,17 +2853,17 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             self.ldt.base=0;
             self.ldt.limit=0;
         }else{
-            if(selector&0x4)Wc(13,selector&0xfffc);
+            if(selector&0x4)call_intro2(13,selector&0xfffc);
             sa=self.gdt;
             Lb=selector&~7;
             ee=7;
-            if((Lb+ee)>sa.limit)Wc(13,selector&0xfffc);
+            if((Lb+ee)>sa.limit)call_intro2(13,selector&0xfffc);
             fa=(sa.base+Lb)&-1;
             Cd=wb();
             fa+=4;
             Ad=wb();
-            if((Ad&(1<<12))||((Ad>>8)&0xf)!=2)Wc(13,selector&0xfffc);
-            if(!(Ad&(1<<15)))Wc(11,selector&0xfffc);
+            if((Ad&(1<<12))||((Ad>>8)&0xf)!=2)call_intro2(13,selector&0xfffc);
+            if(!(Ad&(1<<15)))call_intro2(11,selector&0xfffc);
             Fd(self.ldt,Cd,Ad);
         }self.ldt.selector=selector;
     }
@@ -2876,18 +2875,18 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             self.tr.limit=0;
             self.tr.flags=0;
         }else{
-            if(selector&0x4)Wc(13,selector&0xfffc);
+            if(selector&0x4)call_intro2(13,selector&0xfffc);
             sa=self.gdt;
             Lb=selector&~7;
             ee=7;
-            if((Lb+ee)>sa.limit)Wc(13,selector&0xfffc);
+            if((Lb+ee)>sa.limit)call_intro2(13,selector&0xfffc);
             fa=(sa.base+Lb)&-1;
             Cd=wb();
             fa+=4;
             Ad=wb();
             Kd=(Ad>>8)&0xf;
-            if((Ad&(1<<12))||(Kd!=1&&Kd!=9))Wc(13,selector&0xfffc);
-            if(!(Ad&(1<<15)))Wc(11,selector&0xfffc);
+            if((Ad&(1<<12))||(Kd!=1&&Kd!=9))call_intro2(13,selector&0xfffc);
+            if(!(Ad&(1<<15)))call_intro2(11,selector&0xfffc);
             Fd(self.tr,Cd,Ad);
             Ad|=(1<<9);
             Cb(Ad);
@@ -2898,31 +2897,31 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         selector&=0xffff;
         Ud=self.cpl;
         if((selector&0xfffc)==0){
-            if(he==2)Wc(13,0);
+            if(he==2)call_intro2(13,0);
             Gd(he,selector,0,0,0);
         }else{
             if(selector&0x4)sa=self.ldt;
             else sa=self.gdt;
             Lb=selector&~7;
-            if((Lb+7)>sa.limit)Wc(13,selector&0xfffc);
+            if((Lb+7)>sa.limit)call_intro2(13,selector&0xfffc);
             fa=(sa.base+Lb)&-1;
             Cd=wb();
             fa+=4;
             Ad=wb();
-            if(!(Ad&(1<<12)))Wc(13,selector&0xfffc);
+            if(!(Ad&(1<<12)))call_intro2(13,selector&0xfffc);
             ie=selector&3;
             Jd=(Ad>>13)&3;
             if(he==2){
-                if((Ad&(1<<11))||!(Ad&(1<<9)))Wc(13,selector&0xfffc);
-                if(ie!=Ud||Jd!=Ud)Wc(13,selector&0xfffc);
+                if((Ad&(1<<11))||!(Ad&(1<<9)))call_intro2(13,selector&0xfffc);
+                if(ie!=Ud||Jd!=Ud)call_intro2(13,selector&0xfffc);
             }else{
-                if((Ad&((1<<11)|(1<<9)))==(1<<11))Wc(13,selector&0xfffc);
+                if((Ad&((1<<11)|(1<<9)))==(1<<11))call_intro2(13,selector&0xfffc);
                 if(!(Ad&(1<<11))||!(Ad&(1<<10))){
-                    if(Jd<Ud||Jd<ie)Wc(13,selector&0xfffc);
+                    if(Jd<Ud||Jd<ie)call_intro2(13,selector&0xfffc);
                 }
             }if(!(Ad&(1<<15))){
-                if(he==2)Wc(12,selector&0xfffc);
-                else Wc(11,selector&0xfffc);
+                if(he==2)call_intro2(12,selector&0xfffc);
+                else call_intro2(11,selector&0xfffc);
             }if(!(Ad&(1<<8))){
                 Ad|=(1<<8);
                 Cb(Ad);
@@ -2931,24 +2930,24 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function je(ke,le){
         var me,Kd,Cd,Ad,Ud,Jd,ie,limit,e;
-        if((ke&0xfffc)==0)Wc(13,0);
+        if((ke&0xfffc)==0)call_intro2(13,0);
         e=Bd(ke);
-        if(!e)Wc(13,ke&0xfffc);
+        if(!e)call_intro2(13,ke&0xfffc);
         Cd=e[0];
         Ad=e[1];
         Ud=self.cpl;
         if(Ad&(1<<12)){
-            if(!(Ad&(1<<11)))Wc(13,ke&0xfffc);
+            if(!(Ad&(1<<11)))call_intro2(13,ke&0xfffc);
             Jd=(Ad>>13)&3;
             if(Ad&(1<<10)){
-                if(Jd>Ud)Wc(13,ke&0xfffc);
+                if(Jd>Ud)call_intro2(13,ke&0xfffc);
             }else{
                 ie=ke&3;
-                if(ie>Ud)Wc(13,ke&0xfffc);
-                if(Jd!=Ud)Wc(13,ke&0xfffc);
-            }if(!(Ad&(1<<15)))Wc(11,ke&0xfffc);
+                if(ie>Ud)call_intro2(13,ke&0xfffc);
+                if(Jd!=Ud)call_intro2(13,ke&0xfffc);
+            }if(!(Ad&(1<<15)))call_intro2(11,ke&0xfffc);
             limit=Dd(Cd,Ad);
-            if((le>>>0)>(limit>>>0))Wc(13,ke&0xfffc);
+            if((le>>>0)>(limit>>>0))call_intro2(13,ke&0xfffc);
             Gd(1,(ke&0xfffc)|Ud,Ed(Cd,Ad),limit,Ad);
             eip=le,offset=Gb=0;
         }else{
@@ -2998,21 +2997,21 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             }
         }else{
             throw"unsupported";
-        }if((ke&0xfffc)==0)Wc(13,ke&0xfffc);
+        }if((ke&0xfffc)==0)call_intro2(13,ke&0xfffc);
         e=Bd(ke);
-        if(!e)Wc(13,ke&0xfffc);
+        if(!e)call_intro2(13,ke&0xfffc);
         Cd=e[0];
         Ad=e[1];
-        if(!(Ad&(1<<12))||!(Ad&(1<<11)))Wc(13,ke&0xfffc);
+        if(!(Ad&(1<<12))||!(Ad&(1<<11)))call_intro2(13,ke&0xfffc);
         Ud=self.cpl;
         ie=ke&3;
-        if(ie<Ud)Wc(13,ke&0xfffc);
+        if(ie<Ud)call_intro2(13,ke&0xfffc);
         Jd=(Ad>>13)&3;
         if(Ad&(1<<10)){
-            if(Jd>ie)Wc(13,ke&0xfffc);
+            if(Jd>ie)call_intro2(13,ke&0xfffc);
         }else{
-            if(Jd!=ie)Wc(13,ke&0xfffc);
-        }if(!(Ad&(1<<15)))Wc(11,ke&0xfffc);
+            if(Jd!=ie)call_intro2(13,ke&0xfffc);
+        }if(!(Ad&(1<<15)))call_intro2(11,ke&0xfffc);
         ze=(ze+qe)&-1;
         if(ie==Ud){
             Gd(1,ke,Ed(Cd,Ad),Dd(Cd,Ad),Ad);
@@ -3032,17 +3031,17 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
             }else{
                 throw"unsupported";
             }if((se&0xfffc)==0){
-                Wc(13,0);
+                call_intro2(13,0);
             }else{
-                if((se&3)!=ie)Wc(13,se&0xfffc);
+                if((se&3)!=ie)call_intro2(13,se&0xfffc);
                 e=Bd(se);
-                if(!e)Wc(13,se&0xfffc);
+                if(!e)call_intro2(13,se&0xfffc);
                 Yd=e[0];
                 Zd=e[1];
-                if(!(Zd&(1<<12))||(Zd&(1<<11))||!(Zd&(1<<9)))Wc(13,se&0xfffc);
+                if(!(Zd&(1<<12))||(Zd&(1<<11))||!(Zd&(1<<9)))call_intro2(13,se&0xfffc);
                 Jd=(Zd>>13)&3;
-                if(Jd!=ie)Wc(13,se&0xfffc);
-                if(!(Zd&(1<<15)))Wc(11,se&0xfffc);
+                if(Jd!=ie)call_intro2(13,se&0xfffc);
+                if(!(Zd&(1<<15)))call_intro2(11,se&0xfffc);
                 Gd(2,se,Ed(Yd,Zd),Dd(Yd,Zd),Zd);
             }Gd(1,ke,Ed(Cd,Ad),Dd(Cd,Ad),Ad);
             Xc(ie);
@@ -3066,7 +3065,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function Be(Ld){
         if(self.eflags&0x00004000){
-            Wc(13,0);
+            call_intro2(13,0);
         }else{
             oe(Ld,1,0);
         }
@@ -3089,7 +3088,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
     }
     function De(base){
         var Ee,Fe;
-        if(base==0)rc(0);
+        if(base==0)call_intro(0);
         Ee=regs[0]&0xff;
         Fe=(Ee/base)&-1;
         Ee=(Ee%base);
@@ -3188,27 +3187,27 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
         var Ea,value,Ha,Ia;
         Ea=phys_mem8[offset++];
         ;
-        if((Ea>>3)==3)rc(6);
+        if((Ea>>3)==3)call_intro(6);
         fa=Ib(Ea);
         value=eb();
         fa=(fa+4)&-1;
         Ha=eb();
         Ga=(Ea>>3)&7;
         Ia=regs[Ga];
-        if(Ia<value||Ia>Ha)rc(5);
+        if(Ia<value||Ia>Ha)call_intro(5);
     }
     function Qe(){
         var Ea,value,Ha,Ia;
         Ea=phys_mem8[offset++];
         ;
-        if((Ea>>3)==3)rc(6);
+        if((Ea>>3)==3)call_intro(6);
         fa=Ib(Ea);
         value=(cb()<<16)>>16;
         fa=(fa+2)&-1;
         Ha=(cb()<<16)>>16;
         Ga=(Ea>>3)&7;
         Ia=(regs[Ga]<<16)>>16;
-        if(Ia<value||Ia>Ha)rc(5);
+        if(Ia<value||Ia>Ha)call_intro(5);
     }
     self=this;
     phys_mem8=this.phys_mem8;
@@ -3497,7 +3496,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x8e:Ea=phys_mem8[offset++];
                              ;
                              Ga=(Ea>>3)&7;
-                             if(Ga>=6||Ga==1)rc(6);
+                             if(Ga>=6||Ga==1)call_intro(6);
                              if((Ea>>6)==3){
                                  value=regs[Ea&7]&0xffff;
                              }else{
@@ -3508,7 +3507,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x8c:Ea=phys_mem8[offset++];
                              ;
                              Ga=(Ea>>3)&7;
-                             if(Ga>=6)rc(6);
+                             if(Ga>=6)call_intro(6);
                              value=self.segs[Ga].selector;
                              if((Ea>>6)==3){
                                  regs[Ea&7]=value;
@@ -3520,7 +3519,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xc4:{
                                  Ea=phys_mem8[offset++];
                                  ;
-                                 if((Ea>>3)==3)rc(6);
+                                 if((Ea>>3)==3)call_intro(6);
                                  fa=Ib(Ea);
                                  value=eb();
                                  fa+=4;
@@ -3532,7 +3531,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xc5:{
                                  Ea=phys_mem8[offset++];
                                  ;
-                                 if((Ea>>3)==3)rc(6);
+                                 if((Ea>>3)==3)call_intro(6);
                                  fa=Ib(Ea);
                                  value=eb();
                                  fa+=4;
@@ -3915,7 +3914,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                             value=ab();
                                         }sc(value);
                                         break;
-                                 default:rc(6);
+                                 default:call_intro(6);
                              }
                              break jd;
                    case 0xf7:Ea=phys_mem8[offset++];
@@ -3986,7 +3985,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                         }regs[0]=zc(regs[2],regs[0],value);
                                         regs[2]=Ma;
                                         break;
-                                 default:rc(6);
+                                 default:call_intro(6);
                              }
                              break jd;
                    case 0xc0:Ea=phys_mem8[offset++];
@@ -4248,7 +4247,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              break jd;
                    case 0x8d:Ea=phys_mem8[offset++];
                              ;
-                             if((Ea>>6)==3)rc(6);
+                             if((Ea>>6)==3)call_intro(6);
                              Da&=~0x000f;
                              regs[(Ea>>3)&7]=Ib(Ea);
                              break jd;
@@ -4276,7 +4275,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                             mb(value);
                                         }
                                         break;
-                                 default:rc(6);
+                                 default:call_intro(6);
                              }
                              break jd;
                    case 0xff:Ea=phys_mem8[offset++];
@@ -4553,11 +4552,11 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xfd:self.df=-1;
                              break jd;
                    case 0xfa:ye=(self.eflags>>12)&3;
-                             if(self.cpl>ye)rc(13);
+                             if(self.cpl>ye)call_intro(13);
                              self.eflags&=~0x00000200;
                              break jd;
                    case 0xfb:ye=(self.eflags>>12)&3;
-                             if(self.cpl>ye)rc(13);
+                             if(self.cpl>ye)call_intro(13);
                              self.eflags|=0x00000200;
                              {
                                  if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
@@ -4570,7 +4569,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0x9f:value=Pc();
                              Nb(4,value);
                              break jd;
-                   case 0xf4:if(self.cpl!=0)rc(13);
+                   case 0xf4:if(self.cpl!=0)call_intro(13);
                                  self.halted=1;
                              ret=257;
                              break Re;
@@ -4782,7 +4781,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xdd:
                    case 0xde:
                    case 0xdf:if(self.cr0&((1<<2)|(1<<3))){
-                                 rc(7);
+                                 call_intro(7);
                              }Ea=phys_mem8[offset++];
                              ;
                              Ga=(Ea>>3)&7;
@@ -4796,7 +4795,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              break jd;
                    case 0x9b:break jd;
                    case 0xe4:ye=(self.eflags>>12)&3;
-                             if(self.cpl>ye)rc(13);
+                             if(self.cpl>ye)call_intro(13);
                              value=phys_mem8[offset++];
                              ;
                              Nb(0,self.ld8_port(value));
@@ -4805,7 +4804,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              };
                              break jd;
                    case 0xe5:ye=(self.eflags>>12)&3;
-                             if(self.cpl>ye)rc(13);
+                             if(self.cpl>ye)call_intro(13);
                              value=phys_mem8[offset++];
                              ;
                              regs[0]=self.ld32_port(value);
@@ -4814,7 +4813,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              };
                              break jd;
                    case 0xe6:ye=(self.eflags>>12)&3;
-                             if(self.cpl>ye)rc(13);
+                             if(self.cpl>ye)call_intro(13);
                              value=phys_mem8[offset++];
                              ;
                              self.st8_port(value,regs[0]&0xff);
@@ -4823,7 +4822,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              };
                              break jd;
                    case 0xe7:ye=(self.eflags>>12)&3;
-                             if(self.cpl>ye)rc(13);
+                             if(self.cpl>ye)call_intro(13);
                              value=phys_mem8[offset++];
                              ;
                              self.st32_port(value,regs[0]);
@@ -4832,28 +4831,28 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                              };
                              break jd;
                    case 0xec:ye=(self.eflags>>12)&3;
-                             if(self.cpl>ye)rc(13);
+                             if(self.cpl>ye)call_intro(13);
                              Nb(0,self.ld8_port(regs[2]&0xffff));
                              {
                                  if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
                    case 0xed:ye=(self.eflags>>12)&3;
-                             if(self.cpl>ye)rc(13);
+                             if(self.cpl>ye)call_intro(13);
                              regs[0]=self.ld32_port(regs[2]&0xffff);
                              {
                                  if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
                    case 0xee:ye=(self.eflags>>12)&3;
-                             if(self.cpl>ye)rc(13);
+                             if(self.cpl>ye)call_intro(13);
                              self.st8_port(regs[2]&0xffff,regs[0]&0xff);
                              {
                                  if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                              };
                              break jd;
                    case 0xef:ye=(self.eflags>>12)&3;
-                             if(self.cpl>ye)rc(13);
+                             if(self.cpl>ye)call_intro(13);
                              self.st32_port(regs[2]&0xffff,regs[0]);
                              {
                                  if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
@@ -4893,7 +4892,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                    case 0xd6:
                    case 0xe0:
                    case 0xe1:
-                   case 0xf1:rc(6);
+                   case 0xf1:call_intro(6);
                              break;
                    case 0x0f:opcode=phys_mem8[offset++];
                              ;
@@ -5025,7 +5024,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                               ob(value);
                                                           }
                                                           break;
-                                               case 2:if(self.cpl!=0)rc(13);
+                                               case 2:if(self.cpl!=0)call_intro(13);
                                                           if((Ea>>6)==3){
                                                               value=regs[Ea&7]&0xffff;
                                                           }else{
@@ -5033,7 +5032,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                               value=cb();
                                                           }de(value);
                                                       break;
-                                               case 3:if(self.cpl!=0)rc(13);
+                                               case 3:if(self.cpl!=0)call_intro(13);
                                                           if((Ea>>6)==3){
                                                               value=regs[Ea&7]&0xffff;
                                                           }else{
@@ -5041,7 +5040,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                               value=cb();
                                                           }fe(value);
                                                       break;
-                                               default:rc(6);
+                                               default:call_intro(6);
                                            }
                                            break jd;
                                  case 0x01:Ea=phys_mem8[offset++];
@@ -5049,8 +5048,8 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                            Ja=(Ea>>3)&7;
                                            switch(Ja){
                                                case 2:
-                                               case 3:if((Ea>>6)==3)rc(6);
-                                                          if(this.cpl!=0)rc(13);
+                                               case 3:if((Ea>>6)==3)call_intro(6);
+                                                          if(this.cpl!=0)call_intro(13);
                                                       fa=Ib(Ea);
                                                       value=cb();
                                                       fa+=2;
@@ -5063,18 +5062,18 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                           this.idt.limit=value;
                                                       }
                                                       break;
-                                               case 7:if(this.cpl!=0)rc(13);
-                                                          if((Ea>>6)==3)rc(6);
+                                               case 7:if(this.cpl!=0)call_intro(13);
+                                                          if((Ea>>6)==3)call_intro(6);
                                                       fa=Ib(Ea);
                                                       self.tlb_flush_page(fa&-4096);
                                                       break;
-                                               default:rc(6);
+                                               default:call_intro(6);
                                            }
                                            break jd;
-                                 case 0x20:if(self.cpl!=0)rc(13);
+                                 case 0x20:if(self.cpl!=0)call_intro(13);
                                                Ea=phys_mem8[offset++];
                                            ;
-                                           if((Ea>>6)!=3)rc(6);
+                                           if((Ea>>6)!=3)call_intro(6);
                                            Ga=(Ea>>3)&7;
                                            switch(Ga){
                                                case 0:value=self.cr0;
@@ -5085,13 +5084,13 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                       break;
                                                case 4:value=self.cr4;
                                                       break;
-                                               default:rc(6);
+                                               default:call_intro(6);
                                            }regs[Ea&7]=value;
                                            break jd;
-                                 case 0x22:if(self.cpl!=0)rc(13);
+                                 case 0x22:if(self.cpl!=0)call_intro(13);
                                                Ea=phys_mem8[offset++];
                                            ;
-                                           if((Ea>>6)!=3)rc(6);
+                                           if((Ea>>6)!=3)call_intro(6);
                                            Ga=(Ea>>3)&7;
                                            value=regs[Ea&7];
                                            switch(Ga){
@@ -5103,24 +5102,24 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                       break;
                                                case 4:xd(value);
                                                       break;
-                                               default:rc(6);
+                                               default:call_intro(6);
                                            }
                                            break jd;
-                                 case 0x06:if(self.cpl!=0)rc(13);
+                                 case 0x06:if(self.cpl!=0)call_intro(13);
                                                td(self.cr0&~(1<<3));
                                            break jd;
-                                 case 0x23:if(self.cpl!=0)rc(13);
+                                 case 0x23:if(self.cpl!=0)call_intro(13);
                                                Ea=phys_mem8[offset++];
                                            ;
-                                           if((Ea>>6)!=3)rc(6);
+                                           if((Ea>>6)!=3)call_intro(6);
                                            Ga=(Ea>>3)&7;
                                            value=regs[Ea&7];
-                                           if(Ga==4||Ga==5)rc(6);
+                                           if(Ga==4||Ga==5)call_intro(6);
                                            break jd;
                                  case 0xb2:{
                                                Ea=phys_mem8[offset++];
                                                ;
-                                               if((Ea>>3)==3)rc(6);
+                                               if((Ea>>3)==3)call_intro(6);
                                                fa=Ib(Ea);
                                                value=eb();
                                                fa+=4;
@@ -5132,7 +5131,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 0xb4:{
                                                Ea=phys_mem8[offset++];
                                                ;
-                                               if((Ea>>3)==3)rc(6);
+                                               if((Ea>>3)==3)call_intro(6);
                                                fa=Ib(Ea);
                                                value=eb();
                                                fa+=4;
@@ -5144,7 +5143,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 0xb5:{
                                                Ea=phys_mem8[offset++];
                                                ;
-                                               if((Ea>>3)==3)rc(6);
+                                               if((Ea>>3)==3)call_intro(6);
                                                fa=Ib(Ea);
                                                value=eb();
                                                fa+=4;
@@ -5274,7 +5273,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                           qb(value);
                                                       };
                                                       break;
-                                               default:rc(6);
+                                               default:call_intro(6);
                                            }
                                            break jd;
                                  case 0xa3:Ea=phys_mem8[offset++];
@@ -5360,7 +5359,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                Ha=eb();
                                            }regs[Ga]=Kc(regs[Ga],Ha);
                                            break jd;
-                                 case 0x31:if((self.cr4&(1<<2))&&self.cpl!=0)rc(13);
+                                 case 0x31:if((self.cr4&(1<<2))&&self.cpl!=0)call_intro(13);
                                                value=get_cycle_count();
                                            regs[0]=value>>>0;
                                            regs[2]=(value/0x100000000)>>>0;
@@ -5627,7 +5626,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                  case 0xfc:
                                  case 0xfd:
                                  case 0xfe:
-                                 case 0xff:default:rc(6);
+                                 case 0xff:default:call_intro(6);
                              }
                              break;
                    default:switch(opcode){
@@ -5955,7 +5954,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                                          value=cb();
                                                      }uc(value);
                                                      break;
-                                              default:rc(6);
+                                              default:call_intro(6);
                                           }
                                           break jd;
                                case 0x1c1:Ea=phys_mem8[offset++];
@@ -6148,7 +6147,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                case 0x1df:opcode&=0xff;
                                           break;
                                case 0x1e5:ye=(self.eflags>>12)&3;
-                                          if(self.cpl>ye)rc(13);
+                                          if(self.cpl>ye)call_intro(13);
                                           value=phys_mem8[offset++];
                                           ;
                                           Ob(0,self.ld16_port(value));
@@ -6157,7 +6156,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           };
                                           break jd;
                                case 0x1e7:ye=(self.eflags>>12)&3;
-                                          if(self.cpl>ye)rc(13);
+                                          if(self.cpl>ye)call_intro(13);
                                           value=phys_mem8[offset++];
                                           ;
                                           self.st16_port(value,regs[0]&0xffff);
@@ -6166,14 +6165,14 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                           };
                                           break jd;
                                case 0x1ed:ye=(self.eflags>>12)&3;
-                                          if(self.cpl>ye)rc(13);
+                                          if(self.cpl>ye)call_intro(13);
                                           Ob(0,self.ld16_port(regs[2]&0xffff));
                                           {
                                               if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
                                           };
                                           break jd;
                                case 0x1ef:ye=(self.eflags>>12)&3;
-                                          if(self.cpl>ye)rc(13);
+                                          if(self.cpl>ye)call_intro(13);
                                           self.st16_port(regs[2]&0xffff,regs[0]&0xffff);
                                           {
                                               if(self.hard_irq!=0&&(self.eflags&0x00000200))break Re;
@@ -6336,7 +6335,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                case 0x1fb:
                                case 0x1fc:
                                case 0x1fd:
-                               case 0x1fe:default:rc(6);
+                               case 0x1fe:default:call_intro(6);
                                case 0x10f:opcode=phys_mem8[offset++];
                                           ;
                                           opcode|=0x0100;
@@ -6587,7 +6586,7 @@ CPU_X86.prototype.exec_internal=function(cycle_count,interrupt){
                                               case 0x1bc:
                                               case 0x1bd:
                                               case 0x1bf:
-                                              case 0x1c0:default:rc(6);
+                                              case 0x1c0:default:call_intro(6);
                                           }
                                           break;
                            }
