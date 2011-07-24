@@ -25,7 +25,7 @@ function CPU_X86(){
     this.cc_op2=0;
     this.cc_dst2=0;
     this.df=1;
-    this.eflags=0x2;
+    this.eflags=0x2; // condition code emulation
     this.cycle_count=0;
     this.hard_irq=0;
     this.hard_intno=-1;
